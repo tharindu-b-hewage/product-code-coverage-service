@@ -20,15 +20,15 @@ package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
 
 public class Products {
 
-    private ProductArea[] products;
+    private ProductArea[] productAreas;
 
-    public void setProducts(ProductArea[] products) {
+    public void setProductAreas(ProductArea[] productAreas) {
 
-        this.products = products;
+        this.productAreas = productAreas;
     }
 
-    public ProductArea[] getProducts() {
+    public ProductArea[] getProductAreas() {
 
-        return products;
+        return productAreas;
     }
 }

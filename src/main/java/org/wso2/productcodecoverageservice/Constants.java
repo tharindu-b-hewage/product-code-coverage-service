@@ -18,8 +18,6 @@
 
 package org.wso2.productcodecoverageservice;
 
-import java.util.stream.Stream;
-
 public class Constants {
 
     public class Info {
@@ -30,15 +28,16 @@ public class Constants {
 
     public class Jenkins {
 
-        public static final String WORKSPACE_DIRECTORY_PREFIX = "codeCoverageJenkinsWorkspace";
+        public static final String WORKSPACE_DIRECTORY_PREFIX = "codeCoverageServiceTemp";
         public static final String JENKINS_SERVER_BASE64_AUTH_STRING = "jenkinsBase64EncodedBasicAuthString";
         public static final String LAST_SUCCESSFUL_BUILD = "lastSuccessfulBuild";
         public static final String JACOCO_DATA_FILE = "jacoco/jacoco.exec";
-        public static final String CLASSES_ZIP = "";
+        public static final String CLASSES_ZIP = "compiledClassFiles/classFiles.zip";
         public static final String JACOCO_DATAFILES_FOLDER = "jacocoDataFiles";
         public static final String COMPILED_CLASSES_FOLDER = "compiledClasses";
         public static final String JACOCO_DATAFILE_NAME = "jacoco.exec";
         public static final String COMPILED_CLASSES_FILE_NAME = "classes.zip";
+        public static final String JENKINS_SERVER_URL = "jenkinsServerURL";
     }
 
     public class Coverage {
@@ -48,15 +47,16 @@ public class Constants {
         public static final String EXTRACTED_CLASS_FOLDER = "extractedClasses";
         public static final String LINE_COVERAGE_RATIO = "lineCoverageRatio";
         public static final String LINES_TO_COVER = "linesToCover";
-        public static final String ORG_FOLDER = "org";
+        public static final String ORG_FOLDER = "classes";
         public static final String TRUSTED_BASIC_AUTH_USER = "trustedBasicAuthString";
     }
 
     public class General {
 
-        public static final String PROPERTIES_PATH = "/home/tharindu/Desktop/codeCoverageService.properties";
+        public static final String PROPERTIES_PATH = "application.properties";
         public static final String POST_PRODUCT_COVERAGE_REQUEST = "/product-coverage";
         public static final String URL_SEPERATOR = "/";
         public static final String STEP_BACK = "../";
+        public static final String SKIPPED_COMPONENTS = "skipping.components";
     }
 }

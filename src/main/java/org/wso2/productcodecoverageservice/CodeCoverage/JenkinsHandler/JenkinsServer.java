@@ -20,6 +20,8 @@ package org.wso2.productcodecoverageservice.CodeCoverage.JenkinsHandler;
 
 import org.apache.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.boot.system.ApplicationHome;
+import org.wso2.productcodecoverageservice.Application;
 import org.wso2.productcodecoverageservice.CodeCoverage.HTTPUtils.FileDownloader;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
@@ -29,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 
 /*
@@ -43,15 +46,20 @@ public class JenkinsServer {
     private final Path temporaryProductAreaWorkspace;
     private String[] productAreaJenkinsJobs;
     private String jenkinsAuthString;
+    private String jenkinsServerURL;
 
     public JenkinsServer() throws IOException {
 
+        ApplicationHome home = new ApplicationHome(Application.class);
+
         Properties application = new Properties();
-        application.load(new FileInputStream(General.PROPERTIES_PATH));
+        application.load(new FileInputStream(home.getDir() + General.PROPERTIES_PATH));
 
         this.jenkinsAuthString = application.getProperty(Jenkins.JENKINS_SERVER_BASE64_AUTH_STRING);
+        this.jenkinsServerURL = application.getProperty(Jenkins.JENKINS_SERVER_URL);
 
-        this.temporaryProductAreaWorkspace = Files.createTempDirectory(Jenkins.WORKSPACE_DIRECTORY_PREFIX);
+        this.temporaryProductAreaWorkspace = Files.createDirectories(
+                Paths.get(home.getDir() + File.separator + Jenkins.WORKSPACE_DIRECTORY_PREFIX));
     }
 
     /**
@@ -71,7 +79,9 @@ public class JenkinsServer {
      */
     private void downloadJacocoDataFile(String jenkinsJob) throws IOException {
 
-        String jacocoDataFileRequestURL = jenkinsJob
+        String jacocoDataFileRequestURL = this.jenkinsServerURL
+                + General.URL_SEPERATOR
+                + jenkinsJob
                 + General.URL_SEPERATOR
                 + Jenkins.LAST_SUCCESSFUL_BUILD
                 + General.URL_SEPERATOR
@@ -127,7 +137,9 @@ public class JenkinsServer {
      */
     private void downloadCompiledClassesZip(String jenkinsJob) throws IOException {
 
-        String compiledClassesZipRequestURL = jenkinsJob
+        String compiledClassesZipRequestURL = this.jenkinsServerURL
+                + General.URL_SEPERATOR
+                + jenkinsJob
                 + General.URL_SEPERATOR
                 + Jenkins.LAST_SUCCESSFUL_BUILD
                 + General.URL_SEPERATOR

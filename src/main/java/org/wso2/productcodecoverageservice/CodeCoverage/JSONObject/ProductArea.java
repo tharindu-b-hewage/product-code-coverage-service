@@ -23,26 +23,26 @@ package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
  */
 public class ProductArea {
 
-    private String productName;
-    private String[] productComponents;
+    private String productId;
+    private String[] components;
 
-    public String getProductName() {
+    public String getProductId() {
 
-        return this.productName;
+        return this.productId;
     }
 
-    public void setProductName(String productName) {
+    public void setProductId(String productId) {
 
-        this.productName = productName;
+        this.productId = productId;
     }
 
-    public String[] getProductComponents() {
+    public String[] getComponents() {
 
-        return this.productComponents;
+        return this.components;
     }
 
-    public void setProductComponents(String[] productComponents) {
+    public void setComponents(String[] components) {
 
-        this.productComponents = productComponents;
+        this.components = components;
     }
 }

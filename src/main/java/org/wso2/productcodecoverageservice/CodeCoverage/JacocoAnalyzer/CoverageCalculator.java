@@ -48,8 +48,8 @@ public class CoverageCalculator {
 
     public CoverageCalculator(Path coverageFiles) {
 
-        this.jacocoDatafiles = coverageFiles.toString() + Jenkins.JACOCO_DATAFILES_FOLDER;
-        this.compiledClassesZipFiles = coverageFiles.toString() + Jenkins.COMPILED_CLASSES_FOLDER;
+        this.jacocoDatafiles = coverageFiles.toString() + File.separator + Jenkins.JACOCO_DATAFILES_FOLDER;
+        this.compiledClassesZipFiles = coverageFiles.toString() + File.separator + Jenkins.COMPILED_CLASSES_FOLDER;
     }
 
     /**
@@ -69,7 +69,7 @@ public class CoverageCalculator {
             this.dataFileLoader.load(dataFiles.next());
         }
 
-        String mergedDataFilePath = this.jacocoDatafiles + General.STEP_BACK + Coverage.MERGED_JACOCO_DATA_FILE;
+        String mergedDataFilePath = this.jacocoDatafiles + File.separator + General.STEP_BACK + Coverage.MERGED_JACOCO_DATA_FILE;
         this.dataFileLoader.save(new File(mergedDataFilePath), false);
 
         this.mergedDataFile = mergedDataFilePath;
@@ -85,11 +85,14 @@ public class CoverageCalculator {
 
         HashMap<String, String> coverageData = new HashMap<>();
 
-        File componentClassesZipFile = new File(this.compiledClassesZipFiles + File.separator + component + Jenkins.COMPILED_CLASSES_FILE_NAME);
-        File classExtractFolder = new File(this.compiledClassesZipFiles + File.separator + component + Coverage.EXTRACTED_CLASS_FOLDER);
-        if (!classExtractFolder.exists()) classExtractFolder.createNewFile();
+        File componentClassesZipFile = new File(this.compiledClassesZipFiles + File.separator + component + File.separator + Jenkins.COMPILED_CLASSES_FILE_NAME);
+        if (!componentClassesZipFile.exists()) {
+            throw new IOException("Classes zip file not found");
+        }
+        File classExtractFolder = new File(this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER);
+        if (!classExtractFolder.exists()) classExtractFolder.mkdirs();
 
-        Unzipper.unzipFile(componentClassesZipFile.toString(), classExtractFolder.toString());
+        Unzipper.unzipFile(componentClassesZipFile.toString(), classExtractFolder);
 
         CoverageBuilder coverageBuilder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(this.dataFileLoader.getExecutionDataStore(), coverageBuilder);
@@ -122,7 +125,7 @@ public class CoverageCalculator {
                 productCoverageData.put(eachComponent, componentCoverageData);
             }
             catch (IOException e) {
-                productCoverageData.put(eachComponent, null);
+                log.info("Skipping " + eachComponent + " due to coverage calculation error");
             }
         }
 

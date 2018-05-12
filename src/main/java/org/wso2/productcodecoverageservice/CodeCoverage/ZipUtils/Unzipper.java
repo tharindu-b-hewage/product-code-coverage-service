@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -35,7 +37,7 @@ public class Unzipper {
      * @param unzipFolder
      * @throws IOException
      */
-    public static void unzipFile(String zippedFile, String unzipFolder) throws IOException {
+    public static void unzipFile(String zippedFile, File unzipFolder) throws IOException {
 
         byte[] buffer = new byte[1024];
         ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile));
@@ -43,6 +45,8 @@ public class Unzipper {
         while (zipEntry != null) {
             String fileName = zipEntry.getName();
             File newFile = new File(unzipFolder + File.separator + fileName);
+            Files.createDirectories(Paths.get(newFile.getParent()));
+            newFile.createNewFile();
             FileOutputStream fos = new FileOutputStream(newFile);
             int len;
             while ((len = zis.read(buffer)) > 0) {
