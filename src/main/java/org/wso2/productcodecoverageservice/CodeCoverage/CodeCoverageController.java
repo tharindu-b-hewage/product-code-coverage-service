@@ -23,7 +23,6 @@ import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.wso2.productcodecoverageservice.Application;
 import org.wso2.productcodecoverageservice.CodeCoverage.JSONObject.ProductArea;
@@ -36,8 +35,8 @@ import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Info;
 
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,10 +51,10 @@ public class CodeCoverageController {
     private static final String serviceInfo = Info.MESSAGE;
     private final AtomicLong counter = new AtomicLong();
 
-    @RequestMapping(value = {General.POST_PRODUCT_COVERAGE_REQUEST}, method = {RequestMethod.POST})
-    public ProductsCodeCoverage getProductAreaInfo(@RequestParam(name = "auth", required = true) String authString, @RequestBody Products products) throws IOException {
+    @RequestMapping(value = {Coverage.POST_COVERAGE_REQUEST}, method = {RequestMethod.POST})
+    public ProductsCodeCoverage getProductAreaInfo(@RequestBody Products products) {
 
-        if (products != null && verifyAuthString(authString)) {
+        if (products != null) {
 
             ProductsCodeCoverage productsCodeCoverage = new ProductsCodeCoverage("Success");
 
@@ -83,21 +82,9 @@ public class CodeCoverageController {
             productsCodeCoverage.setProductAreas(productAreaCodeCoveragesList);
 
             return productsCodeCoverage;
-        } else if (verifyAuthString(authString)) {
-            return new ProductsCodeCoverage("service busy");
-        } else if (products == null) {
-            return new ProductsCodeCoverage("Invalid request data");
         } else {
-            return new ProductsCodeCoverage("unauthorized");
+            return new ProductsCodeCoverage("Invalid request data");
         }
-    }
-
-    private boolean verifyAuthString(String authString) throws IOException {
-
-        Properties propertiesFile = new Properties();
-        propertiesFile.load(new FileReader(General.PROPERTIES_PATH));
-
-        return authString.equals(propertiesFile.get(Coverage.TRUSTED_BASIC_AUTH_USER));
     }
 
     private ProductAreaCodeCoverage getProductAreaCodeCoverage(ProductArea productArea) throws IOException {
@@ -121,7 +108,7 @@ public class CodeCoverageController {
             /* Calculate overall code coverage value for the product area*/
             ApplicationHome home = new ApplicationHome(Application.class);
             Properties properties = new Properties();
-            properties.load(new FileInputStream(home.getDir() + General.PROPERTIES_PATH));
+            properties.load(new FileInputStream(home.getDir() + File.separator + General.PROPERTIES_PATH));
 
             String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
 
@@ -149,7 +136,12 @@ public class CodeCoverageController {
                 overallCoveredLines += (long) componentCoveredLines;
                 overallLinesToCover += componentLinesToCover;
             }
-            overallCoveredRatio = (double) overallCoveredLines / (double) overallLinesToCover;
+            if (overallLinesToCover > 0) {
+                overallCoveredRatio = (double) overallCoveredLines / (double) overallLinesToCover;
+            }
+            else {
+                overallCoveredRatio = null;
+            }
             log.info("Overall line coverage in ProductID=" + productArea.getProductId() + " is " + Double.toString(overallCoveredRatio));
         } finally {
             jenkins.clearTemporaryData();

@@ -53,7 +53,7 @@ public class JenkinsServer {
         ApplicationHome home = new ApplicationHome(Application.class);
 
         Properties application = new Properties();
-        application.load(new FileInputStream(home.getDir() + General.PROPERTIES_PATH));
+        application.load(new FileInputStream(home.getDir() + File.separator + General.PROPERTIES_PATH));
 
         this.jenkinsAuthString = application.getProperty(Jenkins.JENKINS_SERVER_BASE64_AUTH_STRING);
         this.jenkinsServerURL = application.getProperty(Jenkins.JENKINS_SERVER_URL);

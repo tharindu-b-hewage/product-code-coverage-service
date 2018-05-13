@@ -122,7 +122,13 @@ public class CoverageCalculator {
             log.info("Calculating coverage data for " + eachComponent);
             try {
                 HashMap<String, String> componentCoverageData = getComponentCoverageData(eachComponent);
-                productCoverageData.put(eachComponent, componentCoverageData);
+                /*
+                As each component is in the format of 'folder_name/job_name', format it and use only the job name
+                 */
+                String[] eachComponentSplitted = eachComponent.split(General.URL_SEPERATOR);
+                String eachComponentJobName = eachComponentSplitted[eachComponentSplitted.length - 1];
+
+                productCoverageData.put(eachComponentJobName, componentCoverageData);
             }
             catch (IOException e) {
                 log.info("Skipping " + eachComponent + " due to coverage calculation error");

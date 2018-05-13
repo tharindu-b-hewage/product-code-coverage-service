@@ -22,14 +22,14 @@ public class Constants {
 
     public class Info {
 
-        public static final String GET_REQUEST_INFO = "/info";
+        public static final String GET_REQUEST_INFO = "/product-coverage-service/info";
         public static final String MESSAGE = "wso2 product coverage service";
     }
 
     public class Jenkins {
 
         public static final String WORKSPACE_DIRECTORY_PREFIX = "codeCoverageServiceTemp";
-        public static final String JENKINS_SERVER_BASE64_AUTH_STRING = "jenkinsBase64EncodedBasicAuthString";
+        public static final String JENKINS_SERVER_BASE64_AUTH_STRING = "jenkins.base64.encoded.basic.auth.string";
         public static final String LAST_SUCCESSFUL_BUILD = "lastSuccessfulBuild";
         public static final String JACOCO_DATA_FILE = "jacoco/jacoco.exec";
         public static final String CLASSES_ZIP = "compiledClassFiles/classFiles.zip";
@@ -37,7 +37,7 @@ public class Constants {
         public static final String COMPILED_CLASSES_FOLDER = "compiledClasses";
         public static final String JACOCO_DATAFILE_NAME = "jacoco.exec";
         public static final String COMPILED_CLASSES_FILE_NAME = "classes.zip";
-        public static final String JENKINS_SERVER_URL = "jenkinsServerURL";
+        public static final String JENKINS_SERVER_URL = "jenkins.server.URL";
     }
 
     public class Coverage {
@@ -48,15 +48,18 @@ public class Constants {
         public static final String LINE_COVERAGE_RATIO = "lineCoverageRatio";
         public static final String LINES_TO_COVER = "linesToCover";
         public static final String ORG_FOLDER = "classes";
-        public static final String TRUSTED_BASIC_AUTH_USER = "trustedBasicAuthString";
+        public static final String TRUSTED_BASIC_AUTH_USER = "trusted.basic.auth.string";
+        public static final String POST_COVERAGE_REQUEST = "/product-coverage-service/code-coverage";
     }
 
     public class General {
 
         public static final String PROPERTIES_PATH = "application.properties";
-        public static final String POST_PRODUCT_COVERAGE_REQUEST = "/product-coverage";
         public static final String URL_SEPERATOR = "/";
         public static final String STEP_BACK = "../";
         public static final String SKIPPED_COMPONENTS = "skipping.components";
+        public static final String BASIC_AUTH_USER_NAME = "auth.user.name";
+        public static final String BASIC_AUTH_USER_PASSWORD = "auth.user.password";
+        public static final String BASIC_AUTH_ROLE = "USER";
     }
 }
