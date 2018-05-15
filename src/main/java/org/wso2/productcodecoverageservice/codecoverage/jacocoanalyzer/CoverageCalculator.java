@@ -112,7 +112,10 @@ public class CoverageCalculator {
         Analyzer analyzer = new Analyzer(this.dataFileLoader.getExecutionDataStore(), coverageBuilder);
 
         /* Use org folder in the extracted folder as it contain the class files required*/
-        analyzer.analyzeAll(new File(classExtractFolder.toString() + File.separator + Coverage.ORG_FOLDER + File.separator + Coverage.WSO2));
+        analyzer.analyzeAll(new File(classExtractFolder.toString()
+                + File.separator + Coverage.CLASSES
+                + File.separator + Coverage.ORG
+                + File.separator + Coverage.WSO2));
         /*
         Calculate and prepare output data
          */
