@@ -63,6 +63,14 @@ public class Constants {
         public static final String WSO2 = "wso2";
     }
 
+    public class Report{
+
+        public static final String GET_COVERAGE_REPORT_REQUEST = "/product-coverage-service/coverage-report";
+        public static final String PRODUCT_ID = "productID";
+        public static final String COMPONENT_NAME = "componentName";
+        public static final String HTML_INDEX_FILE = "index.html";
+    }
+
     public class General {
 
         public static final String PROPERTIES_PATH = "application.properties";
