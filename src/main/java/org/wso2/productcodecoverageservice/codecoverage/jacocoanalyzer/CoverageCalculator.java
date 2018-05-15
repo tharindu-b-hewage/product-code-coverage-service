@@ -16,15 +16,17 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JacocoAnalyzer;
+package org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.tools.ExecFileLoader;
-import org.wso2.productcodecoverageservice.CodeCoverage.CodeCoverageController;
-import org.wso2.productcodecoverageservice.CodeCoverage.ZipUtils.Unzipper;
+import org.springframework.boot.system.ApplicationHome;
+import org.wso2.productcodecoverageservice.Application;
+import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
+import org.wso2.productcodecoverageservice.codecoverage.ziputils.Unzipper;
 import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
@@ -43,13 +45,17 @@ public class CoverageCalculator {
     private static final Logger log = Logger.getLogger(CodeCoverageController.class);
     private final String jacocoDatafiles;
     private final String compiledClassesZipFiles;
+    private final String sourcesZipFiles;
     private final ExecFileLoader dataFileLoader = new ExecFileLoader();
     private String mergedDataFile = null;
+    private String productID;
 
-    public CoverageCalculator(Path coverageFiles) {
+    public CoverageCalculator(Path coverageFiles, String productID) {
 
         this.jacocoDatafiles = coverageFiles.toString() + File.separator + Jenkins.JACOCO_DATAFILES_FOLDER;
         this.compiledClassesZipFiles = coverageFiles.toString() + File.separator + Jenkins.COMPILED_CLASSES_FOLDER;
+        this.sourcesZipFiles = coverageFiles.toString() + File.separator + Jenkins.SOURCE_FILES_FOLDER;
+        this.productID = productID;
     }
 
     /**
@@ -85,21 +91,31 @@ public class CoverageCalculator {
 
         HashMap<String, String> coverageData = new HashMap<>();
 
-        File componentClassesZipFile = new File(this.compiledClassesZipFiles + File.separator + component + File.separator + Jenkins.COMPILED_CLASSES_FILE_NAME);
-        if (!componentClassesZipFile.exists()) {
-            throw new IOException("Classes zip file not found");
+        File componentClassesZipFile = new File(
+                this.compiledClassesZipFiles + File.separator + component + File.separator + Jenkins.COMPILED_CLASSES_FILE_NAME);
+        File sourcesZipFile = new File(
+                this.sourcesZipFiles + File.separator + component + File.separator + Jenkins.SOURCE_FILE_ZIP);
+        if (!componentClassesZipFile.exists() || !sourcesZipFile.exists()) {
+            throw new IOException("Classes or source files cannot be found");
         }
-        File classExtractFolder = new File(this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER);
+        File classExtractFolder = new File(
+                this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER);
+        File sourceExtractFolder = new File(
+                this.sourcesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_SOURCE_FOLDER);
         if (!classExtractFolder.exists()) classExtractFolder.mkdirs();
+        if (!sourceExtractFolder.exists()) sourceExtractFolder.mkdirs();
 
         Unzipper.unzipFile(componentClassesZipFile.toString(), classExtractFolder);
+        Unzipper.unzipFile(sourcesZipFile.toString(), sourceExtractFolder);
 
         CoverageBuilder coverageBuilder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(this.dataFileLoader.getExecutionDataStore(), coverageBuilder);
 
         /* Use org folder in the extracted folder as it contain the class files required*/
-        analyzer.analyzeAll(new File(classExtractFolder.toString() + File.separator + Coverage.ORG_FOLDER));
-
+        analyzer.analyzeAll(new File(classExtractFolder.toString() + File.separator + Coverage.ORG_FOLDER + File.separator + Coverage.WSO2));
+        /*
+        Calculate and prepare output data
+         */
         String lineCoverageRatio = Double.toString(coverageBuilder.getBundle(component).getLineCounter().getCoveredRatio());
         String linesToCover = Integer.toString(coverageBuilder.getBundle(component).getLineCounter().getTotalCount());
 
@@ -107,6 +123,44 @@ public class CoverageCalculator {
         coverageData.put(Coverage.LINES_TO_COVER, linesToCover);
 
         return coverageData;
+    }
+
+    /**
+     * For each of the product component, generate html coverage reports
+     */
+    public void generateCoverageReports(String[] productAreaComponents) {
+
+        for (String component : productAreaComponents) {
+
+            String classExtractFolder = this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER;
+            String sourceExtractFolder = this.sourcesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_SOURCE_FOLDER;
+
+            ApplicationHome home = new ApplicationHome(Application.class);
+            String componentName = (new File(component)).getName();
+
+            ReportGenerator report = new ReportGenerator();
+            report.setExecFileLoader(this.dataFileLoader);
+            report.setClassesDirectory(new File(classExtractFolder + File.separator + Coverage.CLASSES));
+            report.setSourceDirectory(new File(sourceExtractFolder + File.separator + Coverage.SOURCES));
+            report.setReportDirectory(new File(
+                    home.getDir()
+                            + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
+                            + File.separator + this.productID
+                            + File.separator + componentName));
+
+            try {
+                report.createReport();
+            }
+            catch (IOException e) {
+                log.warn("Error creating report for " + componentName + ". Cleaning generated files");
+                try {
+                    FileUtils.cleanDirectory(report.getReportDirectory());
+                }
+                catch (IOException f) {
+                    log.warn("Error cleaning generated report files. Maybe files were not generated at all");
+                }
+            }
+        }
     }
 
     /**
@@ -129,8 +183,7 @@ public class CoverageCalculator {
                 String eachComponentJobName = eachComponentSplitted[eachComponentSplitted.length - 1];
 
                 productCoverageData.put(eachComponentJobName, componentCoverageData);
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 log.info("Skipping " + eachComponent + " due to coverage calculation error");
             }
         }

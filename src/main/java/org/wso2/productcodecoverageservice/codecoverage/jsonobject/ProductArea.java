@@ -16,19 +16,33 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
+package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
 
-public class Products {
+/**
+ * Contain information about a product area
+ */
+public class ProductArea {
 
-    private ProductArea[] productAreas;
+    private String productId;
+    private String[] components;
 
-    public void setProductAreas(ProductArea[] productAreas) {
+    public String getProductId() {
 
-        this.productAreas = productAreas;
+        return this.productId;
     }
 
-    public ProductArea[] getProductAreas() {
+    public void setProductId(String productId) {
 
-        return productAreas;
+        this.productId = productId;
+    }
+
+    public String[] getComponents() {
+
+        return this.components;
+    }
+
+    public void setComponents(String[] components) {
+
+        this.components = components;
     }
 }

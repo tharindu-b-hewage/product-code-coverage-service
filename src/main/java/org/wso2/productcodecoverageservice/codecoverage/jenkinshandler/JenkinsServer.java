@@ -16,13 +16,13 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JenkinsHandler;
+package org.wso2.productcodecoverageservice.codecoverage.jenkinshandler;
 
 import org.apache.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.boot.system.ApplicationHome;
 import org.wso2.productcodecoverageservice.Application;
-import org.wso2.productcodecoverageservice.CodeCoverage.HTTPUtils.FileDownloader;
+import org.wso2.productcodecoverageservice.codecoverage.HTTPutils.FileDownloader;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
 
@@ -114,6 +114,40 @@ public class JenkinsServer {
         }
     }
 
+    private void downloadSourcesZip(String jenkinsJob) throws IOException {
+
+        String sourcesZipRequestURL = this.jenkinsServerURL
+                + General.URL_SEPERATOR
+                + jenkinsJob
+                + General.URL_SEPERATOR
+                + Jenkins.LAST_SUCCESSFUL_BUILD
+                + General.URL_SEPERATOR
+                + Jenkins.SOURCES_ZIP;
+
+        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPERATOR);
+        String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
+        String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
+                + File.separator
+                + Jenkins.SOURCE_FILES_FOLDER
+                + File.separator
+                + jenkinsJobName
+                + File.separator
+                + Jenkins.SOURCE_FILE_ZIP;
+        File sourcesZip = new File(dataFileSavePath);
+
+        /* Clear existing file */
+        if (sourcesZip.exists()) FileUtils.forceDelete(sourcesZip);
+
+        log.info("Downloading " + sourcesZipRequestURL);
+
+        /* If an error occured during download process delete any existing downloaded data*/
+        try {
+            FileDownloader.downloadWithBasicAuth(sourcesZipRequestURL, sourcesZip, this.jenkinsAuthString);
+        } catch (IOException e) {
+            if (sourcesZip.exists()) FileUtils.forceDelete(sourcesZip);
+            throw e;
+        }
+    }
     /**
      * Download all jacoco data files from the last successful build in Jenkins server
      */
@@ -124,8 +158,11 @@ public class JenkinsServer {
             try {
                 downloadJacocoDataFile(eachJenkinsJob);
                 downloadCompiledClassesZip(eachJenkinsJob);
+                downloadSourcesZip(eachJenkinsJob);
             } catch (IOException e) {
                 log.warn("Error while downloading coverage files from jenkins. Skipping " + eachJenkinsJob);
+            } catch (Exception e) {
+                log.fatal("Server connection error. Skiping " + eachJenkinsJob);
             }
         }
     }

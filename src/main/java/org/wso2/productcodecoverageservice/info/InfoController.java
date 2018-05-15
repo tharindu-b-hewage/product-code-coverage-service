@@ -16,7 +16,7 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.Info;
+package org.wso2.productcodecoverageservice.info;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -32,9 +32,9 @@ public class InfoController {
     private final AtomicLong counter = new AtomicLong();
 
     @RequestMapping(value = {Info.GET_REQUEST_INFO}, method = {RequestMethod.GET})
-    public org.wso2.productcodecoverageservice.Info.JSONObject.Info introduce() {
+    public org.wso2.productcodecoverageservice.info.JSONObject.Info introduce() {
 
-        return new org.wso2.productcodecoverageservice.Info.JSONObject.Info(counter.incrementAndGet(),
+        return new org.wso2.productcodecoverageservice.info.JSONObject.Info(counter.incrementAndGet(),
                 String.format(serviceInfo));
     }
 }

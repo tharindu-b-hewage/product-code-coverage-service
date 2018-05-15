@@ -16,27 +16,19 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.Info.JSONObject;
+package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
 
-public class Info {
+public class Products {
 
-    private final long id;
-    private final String infoMessage;
+    private ProductArea[] productAreas;
 
-    public Info(long id, String infoMessage) {
+    public void setProductAreas(ProductArea[] productAreas) {
 
-        this.id = id;
-        this.infoMessage = infoMessage;
+        this.productAreas = productAreas;
     }
 
-    public long getId() {
+    public ProductArea[] getProductAreas() {
 
-        return id;
+        return productAreas;
     }
-
-    public String getInfoMessage() {
-
-        return infoMessage;
-    }
-
 }

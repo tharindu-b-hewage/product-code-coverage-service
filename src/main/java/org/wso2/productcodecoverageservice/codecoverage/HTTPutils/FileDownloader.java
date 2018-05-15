@@ -16,21 +16,16 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.HTTPUtils;
+package org.wso2.productcodecoverageservice.codecoverage.HTTPutils;
 
 import org.apache.commons.io.FileUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.Set;
 
 public class FileDownloader {
 

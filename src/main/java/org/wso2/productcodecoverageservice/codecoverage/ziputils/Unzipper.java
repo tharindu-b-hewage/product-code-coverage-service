@@ -16,9 +16,7 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.ZipUtils;
-
-import org.apache.commons.io.FileUtils;
+package org.wso2.productcodecoverageservice.codecoverage.ziputils;
 
 import java.io.File;
 import java.io.FileInputStream;

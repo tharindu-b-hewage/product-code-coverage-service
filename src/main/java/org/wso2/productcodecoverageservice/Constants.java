@@ -32,24 +32,35 @@ public class Constants {
         public static final String JENKINS_SERVER_BASE64_AUTH_STRING = "jenkins.base64.encoded.basic.auth.string";
         public static final String LAST_SUCCESSFUL_BUILD = "lastSuccessfulBuild";
         public static final String JACOCO_DATA_FILE = "jacoco/jacoco.exec";
-        public static final String CLASSES_ZIP = "compiledClassFiles/classFiles.zip";
+        public static final String CLASSES_ZIP = "projectFiles/classFiles.zip";
+        public static final String SOURCES_ZIP = "projectFiles/sourceFiles.zip";
         public static final String JACOCO_DATAFILES_FOLDER = "jacocoDataFiles";
         public static final String COMPILED_CLASSES_FOLDER = "compiledClasses";
+        public static final String SOURCES_FOLDER = "sources/src/main/java/";
         public static final String JACOCO_DATAFILE_NAME = "jacoco.exec";
         public static final String COMPILED_CLASSES_FILE_NAME = "classes.zip";
         public static final String JENKINS_SERVER_URL = "jenkins.server.URL";
+        public static final String SOURCE_FILES_FOLDER = "sourceFiles";
+        public static final String SOURCE_FILE_ZIP = "sources.zip";
     }
 
     public class Coverage {
 
         public static final String MERGED_JACOCO_DATA_FILE = "jacoco-merged.exec";
         public static final String DATA_FILE_EXTENSION = "exec";
+        public static final String CLASS_FILE_EXTENSION = "class";
         public static final String EXTRACTED_CLASS_FOLDER = "extractedClasses";
         public static final String LINE_COVERAGE_RATIO = "lineCoverageRatio";
         public static final String LINES_TO_COVER = "linesToCover";
         public static final String ORG_FOLDER = "classes";
         public static final String TRUSTED_BASIC_AUTH_USER = "trusted.basic.auth.string";
         public static final String POST_COVERAGE_REQUEST = "/product-coverage-service/code-coverage";
+        public static final String EXTRACTED_SOURCE_FOLDER = "extractedSources";
+        public static final String COVERAGE_REPORTS_DIRECTORY = "Coverage Reports";
+        public static final String CLASSES = "classes";
+        public static final String SOURCES = "sources";
+        public static final String ORG = "org";
+        public static final String WSO2 = "wso2";
     }
 
     public class General {

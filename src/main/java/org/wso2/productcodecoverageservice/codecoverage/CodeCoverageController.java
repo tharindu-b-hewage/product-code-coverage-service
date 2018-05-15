@@ -16,7 +16,7 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage;
+package org.wso2.productcodecoverageservice.codecoverage;
 
 import org.apache.log4j.Logger;
 import org.springframework.boot.system.ApplicationHome;
@@ -25,12 +25,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.wso2.productcodecoverageservice.Application;
-import org.wso2.productcodecoverageservice.CodeCoverage.JSONObject.ProductArea;
-import org.wso2.productcodecoverageservice.CodeCoverage.JSONObject.ProductAreaCodeCoverage;
-import org.wso2.productcodecoverageservice.CodeCoverage.JSONObject.Products;
-import org.wso2.productcodecoverageservice.CodeCoverage.JSONObject.ProductsCodeCoverage;
-import org.wso2.productcodecoverageservice.CodeCoverage.JacocoAnalyzer.CoverageCalculator;
-import org.wso2.productcodecoverageservice.CodeCoverage.JenkinsHandler.JenkinsServer;
+import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductArea;
+import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductAreaCodeCoverage;
+import org.wso2.productcodecoverageservice.codecoverage.jsonobject.Products;
+import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductsCodeCoverage;
+import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.CoverageCalculator;
+import org.wso2.productcodecoverageservice.codecoverage.jenkinshandler.JenkinsServer;
 import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Info;
@@ -99,11 +99,12 @@ public class CodeCoverageController {
             jenkins.setProductAreaJenkinsJobs(productArea.getComponents());
             jenkins.downloadCoverageFiles();
 
-            CoverageCalculator coverageCalculator = new CoverageCalculator(jenkins.getTemporaryProductAreaWorkspace());
+            CoverageCalculator coverageCalculator = new CoverageCalculator(jenkins.getTemporaryProductAreaWorkspace(), productArea.getProductId());
             log.info("Merging retrieved jacoco data files");
             coverageCalculator.mergeDataFiles();
-            log.info("Calculating code coverage data for each component");
             productCodeCoverage = coverageCalculator.getProductCoverageData(productArea.getComponents());
+            log.info("Generating coverage reports");
+            coverageCalculator.generateCoverageReports(productArea.getComponents());
 
             /* Calculate overall code coverage value for the product area*/
             ApplicationHome home = new ApplicationHome(Application.class);
@@ -142,7 +143,7 @@ public class CodeCoverageController {
             else {
                 overallCoveredRatio = null;
             }
-            log.info("Overall line coverage in ProductID=" + productArea.getProductId() + " is " + Double.toString(overallCoveredRatio));
+            log.info("Overall line coverage in ProductID=" + productArea.getProductId() + " is " + Double.toString(Math.round(overallCoveredRatio * 100)) + "%");
         } finally {
             jenkins.clearTemporaryData();
         }

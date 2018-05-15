@@ -16,7 +16,7 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
+package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
 
 public class ProductsCodeCoverage {
 

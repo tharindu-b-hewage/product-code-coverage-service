@@ -16,33 +16,27 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
+package org.wso2.productcodecoverageservice.info.JSONObject;
 
-/**
- * Contain information about a product area
- */
-public class ProductArea {
+public class Info {
 
-    private String productId;
-    private String[] components;
+    private final long id;
+    private final String infoMessage;
 
-    public String getProductId() {
+    public Info(long id, String infoMessage) {
 
-        return this.productId;
+        this.id = id;
+        this.infoMessage = infoMessage;
     }
 
-    public void setProductId(String productId) {
+    public long getId() {
 
-        this.productId = productId;
+        return id;
     }
 
-    public String[] getComponents() {
+    public String getInfoMessage() {
 
-        return this.components;
+        return infoMessage;
     }
 
-    public void setComponents(String[] components) {
-
-        this.components = components;
-    }
 }
