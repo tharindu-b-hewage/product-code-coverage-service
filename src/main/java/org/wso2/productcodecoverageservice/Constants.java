@@ -20,13 +20,13 @@ package org.wso2.productcodecoverageservice;
 
 public class Constants {
 
-    public class Info {
+    public static class Info {
 
         public static final String GET_REQUEST_INFO = "/product-coverage-service/info";
         public static final String MESSAGE = "wso2 product coverage service";
     }
 
-    public class Jenkins {
+    public static class Jenkins {
 
         public static final String WORKSPACE_DIRECTORY_PREFIX = "codeCoverageServiceTemp";
         public static final String JENKINS_SERVER_BASE64_AUTH_STRING = "jenkins.base64.encoded.basic.auth.string";
@@ -43,7 +43,7 @@ public class Constants {
         public static final String SOURCE_FILE_ZIP = "sources.zip";
     }
 
-    public class Coverage {
+    public static class Coverage {
 
         public static final String MERGED_JACOCO_DATA_FILE = "jacoco-merged.exec";
         public static final String DATA_FILE_EXTENSION = "exec";
@@ -58,7 +58,7 @@ public class Constants {
         public static final String WSO2 = "wso2";
     }
 
-    public class Report {
+    public static class Report {
 
         public static final String GET_COVERAGE_REPORT_REQUEST = "/product-coverage-service/coverage-report";
         public static final String PRODUCT_ID = "productID";
@@ -66,7 +66,7 @@ public class Constants {
         public static final String HTML_INDEX_FILE = "index.html";
     }
 
-    public class General {
+    public static class General {
 
         public static final String PROPERTIES_PATH = "application.properties";
         public static final String URL_SEPARATOR = "/";

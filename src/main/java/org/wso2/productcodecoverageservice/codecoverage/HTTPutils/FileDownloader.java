@@ -52,15 +52,15 @@ public class FileDownloader {
 
             // opens an output stream to save into file
             FileUtils.forceMkdirParent(fileSavePath);
-            FileOutputStream outputStream = new FileOutputStream(fileSavePath);
 
-            int bytesRead;
-            byte[] buffer = new byte[4096];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+            try (FileOutputStream outputStream = new FileOutputStream(fileSavePath)) {
+
+                int bytesRead;
+                byte[] buffer = new byte[4096];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
             }
-
-            outputStream.close();
             inputStream.close();
         } else {
             throw new IOException("File download failed");

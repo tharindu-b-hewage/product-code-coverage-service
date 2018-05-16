@@ -39,7 +39,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public SecurityConfig() throws IOException {
 
         ApplicationHome home = new ApplicationHome(Application.class);
-        this.application.load(new FileReader(home.getDir() + File.separator + Constants.General.PROPERTIES_PATH));
+        try (FileReader propertiesStream = new FileReader(home.getDir() + File.separator + Constants.General.PROPERTIES_PATH)) {
+            this.application.load(propertiesStream);
+        }
     }
 
     // Authentication : User --> Roles

@@ -39,22 +39,22 @@ public class Unzipper {
     public static void unzipFile(String zippedFile, File unzipFolder) throws IOException {
 
         byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            String fileName = zipEntry.getName();
-            File newFile = new File(unzipFolder + File.separator + fileName);
-            Files.createDirectories(Paths.get(newFile.getParent()));
-            newFile.createNewFile();
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                String fileName = zipEntry.getName();
+                File newFile = new File(unzipFolder + File.separator + fileName);
+                Files.createDirectories(Paths.get(newFile.getParent()));
+                newFile.createNewFile();
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+                zipEntry = zis.getNextEntry();
             }
-            fos.close();
-            zipEntry = zis.getNextEntry();
+            zis.closeEntry();
         }
-        zis.closeEntry();
-        zis.close();
     }
 }

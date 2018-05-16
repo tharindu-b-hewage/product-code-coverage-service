@@ -107,9 +107,12 @@ public class CodeCoverageController {
             /* Calculate overall code coverage value for the product area*/
             ApplicationHome home = new ApplicationHome(Application.class);
             Properties properties = new Properties();
-            properties.load(new FileInputStream(home.getDir() + File.separator + General.PROPERTIES_PATH));
+            String[] skippingComponents;
 
-            String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
+            try (FileInputStream propertiesStream = new FileInputStream(home.getDir() + File.separator + General.PROPERTIES_PATH)) {
+                properties.load(propertiesStream);
+                skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
+            }
 
             for (String productAreaComponent : productCodeCoverage.keySet()) {
                 /*
