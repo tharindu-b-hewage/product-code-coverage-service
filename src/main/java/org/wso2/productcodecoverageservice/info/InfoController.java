@@ -23,18 +23,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.wso2.productcodecoverageservice.Constants.Info;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 @RestController
 public class InfoController {
 
     private static final String serviceInfo = Info.MESSAGE;
-    private final AtomicLong counter = new AtomicLong();
 
     @RequestMapping(value = {Info.GET_REQUEST_INFO}, method = {RequestMethod.GET})
-    public org.wso2.productcodecoverageservice.info.JSONObject.Info introduce() {
+    public org.wso2.productcodecoverageservice.info.jsonobject.Info introduce() {
 
-        return new org.wso2.productcodecoverageservice.info.JSONObject.Info(counter.incrementAndGet(),
-                String.format(serviceInfo));
+        return new org.wso2.productcodecoverageservice.info.jsonobject.Info(serviceInfo);
     }
 }

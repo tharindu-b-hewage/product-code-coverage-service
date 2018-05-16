@@ -18,8 +18,6 @@
 
 package org.wso2.productcodecoverageservice.coveragereport.jsonobject;
 
-import java.util.stream.Stream;
-
 public class CoverageReport {
 
     private final String reportPath;

@@ -22,9 +22,9 @@ import org.apache.log4j.Logger;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.boot.system.ApplicationHome;
 import org.wso2.productcodecoverageservice.Application;
-import org.wso2.productcodecoverageservice.codecoverage.HTTPutils.FileDownloader;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
+import org.wso2.productcodecoverageservice.codecoverage.HTTPutils.FileDownloader;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -73,6 +73,21 @@ public class JenkinsServer {
     }
 
     /**
+     * Download A file from the url with basic auth. If the download process is interrupted, clear all remaining data
+     */
+    private void downloadFile(String URL, File saveFile, String basicAuthString) throws IOException {
+
+        try {
+            FileDownloader.downloadWithBasicAuth(URL, saveFile, basicAuthString);
+        } catch (IOException e) {
+            if (saveFile.exists()) FileUtils.forceDelete(saveFile);
+
+            /* Throw the exception to stop downloading class files for this component */
+            throw e;
+        }
+    }
+
+    /**
      * Download a given Jacoco data file from the last successful build in Jenkins server
      *
      * @param jenkinsJob Name in the jenkins for a required repository
@@ -80,14 +95,14 @@ public class JenkinsServer {
     private void downloadJacocoDataFile(String jenkinsJob) throws IOException {
 
         String jacocoDataFileRequestURL = this.jenkinsServerURL
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + jenkinsJob
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.LAST_SUCCESSFUL_BUILD
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.JACOCO_DATA_FILE;
 
-        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPERATOR);
+        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
         String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
         String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
                 + File.separator
@@ -103,28 +118,20 @@ public class JenkinsServer {
 
         log.info("Downloading " + jacocoDataFileRequestURL);
 
-        /* If an error occured during download process delete any existing downloaded data*/
-        try {
-            FileDownloader.downloadWithBasicAuth(jacocoDataFileRequestURL, dataFileLocation, this.jenkinsAuthString);
-        } catch (IOException e) {
-            if (dataFileLocation.exists()) FileUtils.forceDelete(dataFileLocation);
-
-            /* Throw the exception to stop downloading class files for this component */
-            throw e;
-        }
+        downloadFile(jacocoDataFileRequestURL, dataFileLocation, this.jenkinsAuthString);
     }
 
     private void downloadSourcesZip(String jenkinsJob) throws IOException {
 
         String sourcesZipRequestURL = this.jenkinsServerURL
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + jenkinsJob
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.LAST_SUCCESSFUL_BUILD
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.SOURCES_ZIP;
 
-        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPERATOR);
+        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
         String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
         String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
                 + File.separator
@@ -140,18 +147,13 @@ public class JenkinsServer {
 
         log.info("Downloading " + sourcesZipRequestURL);
 
-        /* If an error occured during download process delete any existing downloaded data*/
-        try {
-            FileDownloader.downloadWithBasicAuth(sourcesZipRequestURL, sourcesZip, this.jenkinsAuthString);
-        } catch (IOException e) {
-            if (sourcesZip.exists()) FileUtils.forceDelete(sourcesZip);
-            throw e;
-        }
+        downloadFile(sourcesZipRequestURL, sourcesZip, this.jenkinsAuthString);
     }
+
     /**
      * Download all jacoco data files from the last successful build in Jenkins server
      */
-    public void downloadCoverageFiles() throws IOException {
+    public void downloadCoverageFiles() {
 
         for (String eachJenkinsJob : this.productAreaJenkinsJobs) {
 
@@ -162,7 +164,7 @@ public class JenkinsServer {
             } catch (IOException e) {
                 log.warn("Error while downloading coverage files from jenkins. Skipping " + eachJenkinsJob);
             } catch (Exception e) {
-                log.fatal("Server connection error. Skiping " + eachJenkinsJob);
+                log.fatal("Server connection error. Skipping " + eachJenkinsJob);
             }
         }
     }
@@ -175,14 +177,14 @@ public class JenkinsServer {
     private void downloadCompiledClassesZip(String jenkinsJob) throws IOException {
 
         String compiledClassesZipRequestURL = this.jenkinsServerURL
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + jenkinsJob
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.LAST_SUCCESSFUL_BUILD
-                + General.URL_SEPERATOR
+                + General.URL_SEPARATOR
                 + Jenkins.CLASSES_ZIP;
 
-        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPERATOR);
+        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
         String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
         String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
                 + File.separator
@@ -198,19 +200,13 @@ public class JenkinsServer {
 
         log.info("Downloading " + compiledClassesZipRequestURL);
 
-        /* If an error occured during download process delete any existing downloaded data*/
-        try {
-            FileDownloader.downloadWithBasicAuth(compiledClassesZipRequestURL, compiledClassesZip, this.jenkinsAuthString);
-        } catch (IOException e) {
-            if (compiledClassesZip.exists()) FileUtils.forceDelete(compiledClassesZip);
-            throw e;
-        }
+        downloadFile(compiledClassesZipRequestURL, compiledClassesZip, this.jenkinsAuthString);
     }
 
     /**
      * Get the path to the folder containing jacoco report files and compiled class files
      *
-     * @return
+     * @return Temporary folder to be used for downloading class, source and execution data file for the calculation
      */
     public Path getTemporaryProductAreaWorkspace() {
 

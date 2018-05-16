@@ -31,9 +31,10 @@ public class Unzipper {
 
     /**
      * Unzip a compressed file in to a given folder
-     * @param zippedFile
-     * @param unzipFolder
-     * @throws IOException
+     *
+     * @param zippedFile  Path to the zipped file
+     * @param unzipFolder Path file after unzipped
+     * @throws IOException Failure while creating folders or unzipping the zipped folder
      */
     public static void unzipFile(String zippedFile, File unzipFolder) throws IOException {
 

@@ -30,11 +30,12 @@ import java.net.URL;
 public class FileDownloader {
 
     /**
+     * Download a file from a URL with basic authentication
      *
-     * @param fileURL
-     * @param fileSavePath Path of the saved file
+     * @param fileURL           Downloading file
+     * @param fileSavePath      Path of the saved file
      * @param encodedAuthString Base 64 encoded authentication string
-     * @throws IOException
+     * @throws IOException If the connection with url failed or failure to save the downloaded file
      */
     public static void downloadWithBasicAuth(String fileURL, File fileSavePath, String encodedAuthString) throws IOException {
 
@@ -53,7 +54,7 @@ public class FileDownloader {
             FileUtils.forceMkdirParent(fileSavePath);
             FileOutputStream outputStream = new FileOutputStream(fileSavePath);
 
-            int bytesRead = -1;
+            int bytesRead;
             byte[] buffer = new byte[4096];
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
@@ -61,8 +62,7 @@ public class FileDownloader {
 
             outputStream.close();
             inputStream.close();
-        }
-        else {
+        } else {
             throw new IOException("File download failed");
         }
     }

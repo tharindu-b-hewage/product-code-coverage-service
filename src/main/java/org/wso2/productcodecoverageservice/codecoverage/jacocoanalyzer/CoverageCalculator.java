@@ -25,11 +25,11 @@ import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.tools.ExecFileLoader;
 import org.springframework.boot.system.ApplicationHome;
 import org.wso2.productcodecoverageservice.Application;
-import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
-import org.wso2.productcodecoverageservice.codecoverage.ziputils.Unzipper;
 import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
+import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
+import org.wso2.productcodecoverageservice.codecoverage.ziputils.Unzipper;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,8 +47,7 @@ public class CoverageCalculator {
     private final String compiledClassesZipFiles;
     private final String sourcesZipFiles;
     private final ExecFileLoader dataFileLoader = new ExecFileLoader();
-    private String mergedDataFile = null;
-    private String productID;
+    private final String productID;
 
     public CoverageCalculator(Path coverageFiles, String productID) {
 
@@ -61,7 +60,7 @@ public class CoverageCalculator {
     /**
      * Get all the execution files belong to the product area jobs and create a single execution data file
      *
-     * @throws IOException
+     * @throws IOException If execution data files cannot be found, loaded or the merged data file cannot be saved
      */
     public void mergeDataFiles() throws IOException {
 
@@ -78,18 +77,15 @@ public class CoverageCalculator {
         String mergedDataFilePath = this.jacocoDatafiles + File.separator + General.STEP_BACK + Coverage.MERGED_JACOCO_DATA_FILE;
         this.dataFileLoader.save(new File(mergedDataFilePath), false);
 
-        this.mergedDataFile = mergedDataFilePath;
     }
 
     /**
      * Get line coverage ratio and number of lines to cover for the product area component
      *
      * @param component Name of the component
-     * @return A hashmap containing line coverage ratio and number of lines to cover
+     * @return A ComponentCoverage object containing line coverage ratio and number of lines to cover
      */
-    private HashMap<String, String> getComponentCoverageData(String component) throws IOException {
-
-        HashMap<String, String> coverageData = new HashMap<>();
+    private ComponentCoverage getComponentCoverageData(String component) throws IOException {
 
         File componentClassesZipFile = new File(
                 this.compiledClassesZipFiles + File.separator + component + File.separator + Jenkins.COMPILED_CLASSES_FILE_NAME);
@@ -122,10 +118,7 @@ public class CoverageCalculator {
         String lineCoverageRatio = Double.toString(coverageBuilder.getBundle(component).getLineCounter().getCoveredRatio());
         String linesToCover = Integer.toString(coverageBuilder.getBundle(component).getLineCounter().getTotalCount());
 
-        coverageData.put(Coverage.LINE_COVERAGE_RATIO, lineCoverageRatio);
-        coverageData.put(Coverage.LINES_TO_COVER, linesToCover);
-
-        return coverageData;
+        return new ComponentCoverage(lineCoverageRatio, linesToCover);
     }
 
     /**
@@ -153,13 +146,11 @@ public class CoverageCalculator {
 
             try {
                 report.createReport();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 log.warn("Error creating report for " + componentName + ". Cleaning generated files");
                 try {
                     FileUtils.cleanDirectory(report.getReportDirectory());
-                }
-                catch (IOException f) {
+                } catch (IOException f) {
                     log.warn("Error cleaning generated report files. Maybe files were not generated at all");
                 }
             }
@@ -169,21 +160,21 @@ public class CoverageCalculator {
     /**
      * Get line coverage ratio and lines to cover count in each product component in the product area
      *
-     * @return
+     * @return A HashMap containing coverage information for each of the product area component
      */
-    public HashMap<String, HashMap<String, String>> getProductCoverageData(String[] productAreaComponents) {
+    public HashMap<String, ComponentCoverage> getProductCoverageData(String[] productAreaComponents) {
 
-        HashMap<String, HashMap<String, String>> productCoverageData = new HashMap<>();
+        HashMap<String, ComponentCoverage> productCoverageData = new HashMap<>();
 
         for (String eachComponent : productAreaComponents) {
             log.info("Calculating coverage data for " + eachComponent);
             try {
-                HashMap<String, String> componentCoverageData = getComponentCoverageData(eachComponent);
+                ComponentCoverage componentCoverageData = getComponentCoverageData(eachComponent);
                 /*
                 As each component is in the format of 'folder_name/job_name', format it and use only the job name
                  */
-                String[] eachComponentSplitted = eachComponent.split(General.URL_SEPERATOR);
-                String eachComponentJobName = eachComponentSplitted[eachComponentSplitted.length - 1];
+                String[] eachComponentSplit = eachComponent.split(General.URL_SEPARATOR);
+                String eachComponentJobName = eachComponentSplit[eachComponentSplit.length - 1];
 
                 productCoverageData.put(eachComponentJobName, componentCoverageData);
             } catch (IOException e) {

@@ -18,6 +18,8 @@
 
 package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
 
+import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.ComponentCoverage;
+
 import java.util.HashMap;
 
 public class ProductAreaCodeCoverage {
@@ -29,9 +31,9 @@ public class ProductAreaCodeCoverage {
     /*
     Resulting code coverage JSON. Example: {component_name: {coverage_ratio: XX, lines_to_cover: YY}, ..}
      */
-    private final HashMap<String, HashMap<String, String>> componentCodeCoverage;
+    private final HashMap<String, ComponentCoverage> componentCodeCoverage;
 
-    public ProductAreaCodeCoverage(String productId, HashMap<String, HashMap<String, String>> componentCodeCoverage,
+    public ProductAreaCodeCoverage(String productId, HashMap<String, ComponentCoverage> componentCodeCoverage,
                                    String overallLinesToCover, String overallLineCoverageRatio) {
 
         this.productId = productId;
@@ -40,7 +42,7 @@ public class ProductAreaCodeCoverage {
         this.overallLinesToCover = overallLinesToCover;
     }
 
-    public HashMap<String, HashMap<String, String>> getComponentCodeCoverage() {
+    public HashMap<String, ComponentCoverage> getComponentCodeCoverage() {
 
         return componentCodeCoverage;
     }

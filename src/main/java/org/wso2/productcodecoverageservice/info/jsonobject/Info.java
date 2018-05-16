@@ -16,22 +16,15 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.info.JSONObject;
+package org.wso2.productcodecoverageservice.info.jsonobject;
 
 public class Info {
 
-    private final long id;
     private final String infoMessage;
 
-    public Info(long id, String infoMessage) {
+    public Info(String infoMessage) {
 
-        this.id = id;
         this.infoMessage = infoMessage;
-    }
-
-    public long getId() {
-
-        return id;
     }
 
     public String getInfoMessage() {

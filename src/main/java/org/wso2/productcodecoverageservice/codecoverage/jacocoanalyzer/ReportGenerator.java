@@ -33,31 +33,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-public class ReportGenerator {
+class ReportGenerator {
 
     private File reportDirectory;
     private ExecFileLoader execFileLoader;
     private File sourceDirectory;
     private File classesDirectory;
-
-    public static void main(String[] args) throws IOException{
-
-        String classesPath = "/home/tharindu/Desktop/coverage-test/product_apim_2x/classes";
-        String sourcesPath = "/home/tharindu/Desktop/coverage-test/product_apim_2x/sources";
-        String executionPath = "/home/tharindu/Desktop/coverage-test/product_apim_2x/jacoco.exec";
-        String reportPath = "/home/tharindu/Desktop/coverage-test/product_apim_2x/report";
-
-        ExecFileLoader loader = new ExecFileLoader();
-        loader.load(new File(executionPath));
-
-        ReportGenerator report = new ReportGenerator();
-        report.setReportDirectory(new File(reportPath));
-        report.setSourceDirectory(new File(sourcesPath));
-        report.setExecFileLoader(loader);
-        report.setClassesDirectory(new File(classesPath));
-
-        report.createReport();
-    }
 
     public void setClassesDirectory(File classesDirectory) {
 
@@ -67,11 +48,6 @@ public class ReportGenerator {
     public void setExecFileLoader(ExecFileLoader execFileLoader) {
 
         this.execFileLoader = execFileLoader;
-    }
-
-    public void setReportDirectory(File reportDirectory) {
-
-        this.reportDirectory = reportDirectory;
     }
 
     public void setSourceDirectory(File sourceDirectory) {
@@ -84,8 +60,12 @@ public class ReportGenerator {
         return reportDirectory;
     }
 
-    public void createReport()
-            throws IOException {
+    public void setReportDirectory(File reportDirectory) {
+
+        this.reportDirectory = reportDirectory;
+    }
+
+    public void createReport() throws IOException {
 
         // Create a concrete report visitor based on some supplied
         // configuration. In this case we use the defaults
@@ -113,17 +93,20 @@ public class ReportGenerator {
         Iterator<File> classFiles = (org.apache.commons.io.FileUtils.listFiles(new File(modulePath), dataFileExtension, false)).iterator();
         File[] subdirectories = new File(modulePath).listFiles(File::isDirectory);
 
-        if (!classFiles.hasNext() && subdirectories.length > 0) { // Create group
-            IReportGroupVisitor groupVisitor = visitor.visitGroup(modulePath.replace(this.classesDirectory + File.separator, "").replace(File.separator, "."));
+        if (subdirectories != null) {
+            if (!classFiles.hasNext() && subdirectories.length > 0) { // Create group
+                IReportGroupVisitor groupVisitor = visitor.visitGroup(modulePath.replace(this.classesDirectory
+                        + File.separator, "").replace(File.separator, "."));
 
-            for (File eachSubModule : subdirectories) {
-                traverseAndGroupModules(eachSubModule.getAbsolutePath(), groupVisitor);
+                for (File eachSubModule : subdirectories) {
+                    traverseAndGroupModules(eachSubModule.getAbsolutePath(), groupVisitor);
+                }
+            } else if (classFiles.hasNext()) {
+                File module = new File(modulePath);
+                IBundleCoverage bundleCoverage = getBundleCoverage(module);
+                visitor.visitBundle(bundleCoverage, new DirectorySourceFileLocator(
+                        this.sourceDirectory, "utf-8", 4));
             }
-        } else if (classFiles.hasNext()) {
-            File module = new File(modulePath);
-            IBundleCoverage bundleCoverage = getBundleCoverage(module);
-            visitor.visitBundle(bundleCoverage, new DirectorySourceFileLocator(
-                    this.sourceDirectory, "utf-8", 4));
         }
     }
 
@@ -135,6 +118,7 @@ public class ReportGenerator {
 
         analyzer.analyzeAll(classesDirectory);
 
-        return coverageBuilder.getBundle(classesDirectory.getAbsolutePath().replace(this.classesDirectory.getAbsolutePath() + File.separator, "").replace(File.separator, "."));
+        return coverageBuilder.getBundle(classesDirectory.getAbsolutePath().replace(this.classesDirectory.getAbsolutePath()
+                + File.separator, "").replace(File.separator, "."));
     }
 }

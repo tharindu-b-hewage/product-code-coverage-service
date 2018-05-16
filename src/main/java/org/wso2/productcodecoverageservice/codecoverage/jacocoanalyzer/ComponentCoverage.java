@@ -16,30 +16,26 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
+package org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer;
 
-public class ProductsCodeCoverage {
+public class ComponentCoverage {
 
-    private final String payloadStatus;
-    private ProductAreaCodeCoverage[] productAreas;
+    private final String componentLineCoveredRatio;
+    private final String componentLinesToCover;
 
-    public ProductsCodeCoverage(String payloadStatus) {
+    ComponentCoverage(String componentLineCoveredRatio, String componentLinesToCover) {
 
-        this.payloadStatus = payloadStatus;
+        this.componentLineCoveredRatio = componentLineCoveredRatio;
+        this.componentLinesToCover = componentLinesToCover;
     }
 
-    public ProductAreaCodeCoverage[] getProductAreas() {
+    public String getComponentLineCoveredRatio() {
 
-        return productAreas;
+        return componentLineCoveredRatio;
     }
 
-    public void setProductAreas(ProductAreaCodeCoverage[] productAreas) {
+    public String getComponentLinesToCover() {
 
-        this.productAreas = productAreas;
-    }
-
-    public String getPayloadStatus() {
-
-        return payloadStatus;
+        return componentLinesToCover;
     }
 }

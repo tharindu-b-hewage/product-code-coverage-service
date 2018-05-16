@@ -25,31 +25,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.wso2.productcodecoverageservice.Application;
+import org.wso2.productcodecoverageservice.Constants.Coverage;
+import org.wso2.productcodecoverageservice.Constants.General;
+import org.wso2.productcodecoverageservice.Constants.Info;
+import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.ComponentCoverage;
+import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.CoverageCalculator;
+import org.wso2.productcodecoverageservice.codecoverage.jenkinshandler.JenkinsServer;
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductArea;
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductAreaCodeCoverage;
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.Products;
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductsCodeCoverage;
-import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.CoverageCalculator;
-import org.wso2.productcodecoverageservice.codecoverage.jenkinshandler.JenkinsServer;
-import org.wso2.productcodecoverageservice.Constants.Coverage;
-import org.wso2.productcodecoverageservice.Constants.General;
-import org.wso2.productcodecoverageservice.Constants.Info;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicLong;
 
 @RestController
 public class CodeCoverageController {
 
     private static final Logger log = Logger.getLogger(CodeCoverageController.class);
     private static final String serviceInfo = Info.MESSAGE;
-    private final AtomicLong counter = new AtomicLong();
 
     @RequestMapping(value = {Coverage.POST_COVERAGE_REQUEST}, method = {RequestMethod.POST})
     public ProductsCodeCoverage getProductAreaInfo(@RequestBody Products products) {
@@ -89,10 +87,10 @@ public class CodeCoverageController {
 
     private ProductAreaCodeCoverage getProductAreaCodeCoverage(ProductArea productArea) throws IOException {
 
-        HashMap<String, HashMap<String, String>> productCodeCoverage;
+        HashMap<String, ComponentCoverage> productCodeCoverage;
         long overallLinesToCover = 0;
         long overallCoveredLines = 0;
-        Double overallCoveredRatio = 0.0;
+        Double overallCoveredRatio;
 
         JenkinsServer jenkins = new JenkinsServer();
         try {
@@ -113,12 +111,10 @@ public class CodeCoverageController {
 
             String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
 
-            Iterator<String> eachProductAreaComponent = productCodeCoverage.keySet().iterator();
-            while (eachProductAreaComponent.hasNext()) {
+            for (String productAreaComponent : productCodeCoverage.keySet()) {
                 /*
                 Skip the component if it's not relevant to the code coverage calculation
                  */
-                String productAreaComponent = eachProductAreaComponent.next();
                 boolean skip = false;
                 for (String skippedComponent : skippingComponents) {
                     if (productAreaComponent.contains(skippedComponent)) {
@@ -128,10 +124,10 @@ public class CodeCoverageController {
                 }
                 if (skip) continue;
 
-                HashMap<String, String> componentCoverage = productCodeCoverage.get(productAreaComponent);
+                ComponentCoverage componentCoverage = productCodeCoverage.get(productAreaComponent);
 
-                long componentLinesToCover = Long.parseLong(componentCoverage.get(Coverage.LINES_TO_COVER));
-                Double componentCoveredRatio = Double.parseDouble(componentCoverage.get(Coverage.LINE_COVERAGE_RATIO));
+                long componentLinesToCover = Long.parseLong(componentCoverage.getComponentLinesToCover());
+                Double componentCoveredRatio = Double.parseDouble(componentCoverage.getComponentLineCoveredRatio());
                 double componentCoveredLines = componentLinesToCover * componentCoveredRatio;
 
                 overallCoveredLines += (long) componentCoveredLines;
@@ -139,15 +135,14 @@ public class CodeCoverageController {
             }
             if (overallLinesToCover > 0) {
                 overallCoveredRatio = (double) overallCoveredLines / (double) overallLinesToCover;
-            }
-            else {
+                log.info("Overall line coverage in ProductID=" + productArea.getProductId() + " is " + Double.toString(Math.round(overallCoveredRatio * 100)) + "%");
+            } else {
                 overallCoveredRatio = null;
             }
-            log.info("Overall line coverage in ProductID=" + productArea.getProductId() + " is " + Double.toString(Math.round(overallCoveredRatio * 100)) + "%");
         } finally {
             jenkins.clearTemporaryData();
         }
         return new ProductAreaCodeCoverage(productArea.getProductId(), productCodeCoverage,
-                Long.toString(overallLinesToCover), Double.toString(overallCoveredRatio));
+                Long.toString(overallLinesToCover), overallCoveredRatio != null ? Double.toString(overallCoveredRatio) : null);
     }
 }

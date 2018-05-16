@@ -39,8 +39,8 @@ public class CoverageReportHandler {
 
     @RequestMapping(value = {Report.GET_COVERAGE_REPORT_REQUEST}, method = {RequestMethod.GET})
     public CoverageReport getComponentCoverageReport(
-            @RequestParam(value = Report.PRODUCT_ID, required = true) String productID,
-            @RequestParam(value = Report.COMPONENT_NAME, required = true) String componentName) {
+            @RequestParam(value = Report.PRODUCT_ID) String productID,
+            @RequestParam(value = Report.COMPONENT_NAME) String componentName) {
 
         ApplicationHome home = new ApplicationHome(Application.class);
         String coverageReportFolderPath = home.getDir() + File.separator + Constants.Coverage.COVERAGE_REPORTS_DIRECTORY;

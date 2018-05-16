@@ -22,13 +22,13 @@ public class Products {
 
     private ProductArea[] productAreas;
 
-    public void setProductAreas(ProductArea[] productAreas) {
-
-        this.productAreas = productAreas;
-    }
-
     public ProductArea[] getProductAreas() {
 
         return productAreas;
+    }
+
+    public void setProductAreas(ProductArea[] productAreas) {
+
+        this.productAreas = productAreas;
     }
 }
