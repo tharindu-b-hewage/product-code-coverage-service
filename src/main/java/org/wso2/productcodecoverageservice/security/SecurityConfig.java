@@ -57,6 +57,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.httpBasic().and().authorizeRequests().antMatchers(Constants.Coverage.POST_COVERAGE_REQUEST)
                 .hasRole(Constants.General.BASIC_AUTH_ROLE).and().csrf().disable().headers().frameOptions().disable();
+
+        http.httpBasic().and().authorizeRequests().antMatchers(Constants.Report.GET_COVERAGE_REPORT_REQUEST)
+                .hasRole(Constants.General.BASIC_AUTH_ROLE).and().csrf().disable().headers().frameOptions().disable();
     }
 
 }
