@@ -1,8 +1,8 @@
 # product-code-coverage-service
 
-Powered By         |  Talks With
-:-------------------------:|:-------------------------:
-![](jacoco1.png)  |  ![](jenkins.png )
+| Powered By         |  Talks With | 
+|:-------------------------:|:-------------------------:
+| ![](jacoco1.png)  |  ![](jenkins.png ) | 
 
 ## Introduction 
 

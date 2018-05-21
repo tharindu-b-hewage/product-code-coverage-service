@@ -25,6 +25,7 @@ import org.wso2.productcodecoverageservice.Application;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
 import org.wso2.productcodecoverageservice.codecoverage.HTTPutils.FileDownloader;
+import org.wso2.productcodecoverageservice.codecoverage.ziputils.Unzipper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,6 +33,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Properties;
 
 /*
@@ -90,6 +92,59 @@ public class JenkinsServer {
     }
 
     /**
+     * Download jacoco source files and save them in the relevant locations
+     *
+     * @param jenkinsJob
+     * @return location of the jacoco data file
+     */
+    private String downloadJacocoSources(String jenkinsJob) throws IOException {
+
+        String jacocoSourcesFileRequestURL = this.jenkinsServerURL
+                + General.URL_SEPARATOR
+                + jenkinsJob
+                + General.URL_SEPARATOR
+                + Jenkins.LAST_SUCCESSFUL_BUILD
+                + General.URL_SEPARATOR
+                + Jenkins.JACOCO_RESOURCES_ZIP;
+
+        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
+        String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
+        String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
+                + File.separator
+                + jenkinsJobName
+                + File.separator
+                + Jenkins.JACOCO_SOURCES_FILE_ZIP;
+        File dataFileLocation = new File(dataFileSavePath);
+
+        /* Clear existing file */
+        if (dataFileLocation.exists()) FileUtils.forceDelete(dataFileLocation);
+
+        log.info("Downloading " + jacocoSourcesFileRequestURL);
+        downloadFile(jacocoSourcesFileRequestURL, dataFileLocation, this.jenkinsAuthString);
+
+        String unzippedFolderPath = dataFileSavePath.replace(File.separator + Jenkins.JACOCO_SOURCES_FILE_ZIP, "");
+        File unzippedFolder = new File(unzippedFolderPath);
+        if (!unzippedFolder.exists()) unzippedFolder.mkdirs();
+
+        Unzipper.unzipFile(dataFileSavePath,
+                unzippedFolder);
+        /*
+        If jacoco.exec file exists for the component, save the path for merging process
+         */
+        String unzippedJacocoExecFilePath = unzippedFolderPath
+                + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER
+                + File.separator + Jenkins.JACOCO_DATAFILE_NAME;
+        if ((new File(unzippedJacocoExecFilePath)).exists()) {
+            return unzippedJacocoExecFilePath;
+        } else {
+            log.warn("Could not find jacoco.exec file in " + unzippedJacocoExecFilePath + ". Skipped");
+            return null;
+        }
+
+        //fileCopy(dataFileSavePath.replace(Jenkins.JACOCO_SOURCES_FILE_ZIP, Jenkins.JACOCO_DATAFILE_NAME), )
+    }
+
+    /**
      * Download a given Jacoco data file from the last successful build in Jenkins server
      *
      * @param jenkinsJob Name in the jenkins for a required repository
@@ -116,6 +171,7 @@ public class JenkinsServer {
         File dataFileLocation = new File(dataFileSavePath);
 
         /* Clear existing file */
+        log.warn("Deleting existing " + dataFileLocation);
         if (dataFileLocation.exists()) FileUtils.forceDelete(dataFileLocation);
 
         log.info("Downloading " + jacocoDataFileRequestURL);
@@ -155,20 +211,27 @@ public class JenkinsServer {
     /**
      * Download all jacoco data files from the last successful build in Jenkins server
      */
-    public void downloadCoverageFiles() {
+    public ArrayList<String> downloadCoverageFiles() {
 
+        ArrayList<String> jacocoDataFiles = new ArrayList<>();
         for (String eachJenkinsJob : this.productAreaJenkinsJobs) {
 
             try {
-                downloadJacocoDataFile(eachJenkinsJob);
-                downloadCompiledClassesZip(eachJenkinsJob);
-                downloadSourcesZip(eachJenkinsJob);
+                //downloadJacocoDataFile(eachJenkinsJob);
+                //downloadCompiledClassesZip(eachJenkinsJob);
+                //downloadSourcesZip(eachJenkinsJob);
+                String jacocoDataFile = downloadJacocoSources(eachJenkinsJob);
+                if (jacocoDataFile != null) {
+                    jacocoDataFiles.add(jacocoDataFile);
+                }
             } catch (IOException e) {
                 log.warn("Error while downloading coverage files from jenkins. Skipping " + eachJenkinsJob);
             } catch (Exception e) {
                 log.fatal("Server connection error. Skipping " + eachJenkinsJob);
             }
         }
+
+        return jacocoDataFiles;
     }
 
     /**

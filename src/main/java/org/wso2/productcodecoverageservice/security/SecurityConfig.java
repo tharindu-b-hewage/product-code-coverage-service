@@ -56,10 +56,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     // Authorization : Role -> Access
     protected void configure(HttpSecurity http) throws Exception {
 
-        http.httpBasic().and().authorizeRequests().antMatchers(Constants.Coverage.POST_COVERAGE_REQUEST)
-                .hasRole(Constants.General.BASIC_AUTH_ROLE).and().csrf().disable().headers().frameOptions().disable();
-
-        http.httpBasic().and().authorizeRequests().antMatchers(Constants.Report.GET_COVERAGE_REPORT_REQUEST)
+        http.httpBasic().and().authorizeRequests().anyRequest()
                 .hasRole(Constants.General.BASIC_AUTH_ROLE).and().csrf().disable().headers().frameOptions().disable();
     }
 

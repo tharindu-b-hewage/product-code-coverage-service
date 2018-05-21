@@ -19,7 +19,9 @@
 package org.wso2.productcodecoverageservice.coveragereport;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.system.ApplicationHome;
+import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -31,12 +33,16 @@ import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
 import org.wso2.productcodecoverageservice.coveragereport.jsonobject.CoverageReport;
 
 import java.io.File;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 @RestController
-public class CoverageReportHandler {
+public class CoverageReportController {
+
+    @Autowired
+    Environment environment;
 
     private static final Logger log = Logger.getLogger(CodeCoverageController.class);
-
     @RequestMapping(value = {Report.GET_COVERAGE_REPORT_REQUEST}, method = {RequestMethod.GET})
     public CoverageReport getComponentCoverageReport(
             @RequestParam(value = Report.PRODUCT_ID) String productID,
@@ -51,14 +57,28 @@ public class CoverageReportHandler {
                 + File.separator + Report.HTML_INDEX_FILE;
         File coverageReportFile = new File(coverageReportPath);
 
-        CoverageReport componentCoverageReport;
-        if (coverageReportFile.exists()) {
-            componentCoverageReport = new CoverageReport(coverageReportPath, componentName, "Success");
-            log.info("Coverage report for " + componentName + " is ");
-        } else {
-            componentCoverageReport = new CoverageReport(null, componentName, "Report missing");
-            log.warn("Coverage report for " + componentName + " is not found");
+        CoverageReport componentCoverageReport = null;
+        boolean reportPathSuccess = true;
+        if (!coverageReportFile.exists()) {
+            reportPathSuccess = false;
         }
-        return componentCoverageReport;
+        try {
+            String coverageReportURL = Constants.General.HTTPS
+                    + InetAddress.getLocalHost().getHostAddress() + ":" + environment.getProperty("local.server.port")
+                    + File.separator + productID
+                    + File.separator + componentName
+                    + File.separator + Report.HTML_INDEX_FILE;
+            componentCoverageReport = new CoverageReport(coverageReportURL, componentName, "Success");
+            log.info("Coverage report path for " + componentName + " is " + componentCoverageReport.getReportPath());
+        } catch (UnknownHostException e) {
+            reportPathSuccess = false;
+        }
+
+        if (reportPathSuccess) {
+            return componentCoverageReport;
+        }
+
+        log.warn("Coverage report for " + componentName + " is not found");
+        return new CoverageReport(null, componentName, "Report missing");
     }
 }

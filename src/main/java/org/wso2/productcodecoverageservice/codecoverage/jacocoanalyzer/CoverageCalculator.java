@@ -29,13 +29,12 @@ import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
 import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
-import org.wso2.productcodecoverageservice.codecoverage.ziputils.Unzipper;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /*
  A Processor for jacoco and repository build files for code coverage
@@ -46,11 +45,13 @@ public class CoverageCalculator {
     private final String jacocoDatafiles;
     private final String compiledClassesZipFiles;
     private final String sourcesZipFiles;
+    private final String workspace;
     private final ExecFileLoader dataFileLoader = new ExecFileLoader();
     private final String productID;
 
     public CoverageCalculator(Path coverageFiles, String productID) {
 
+        this.workspace = coverageFiles.toString();
         this.jacocoDatafiles = coverageFiles.toString() + File.separator + Jenkins.JACOCO_DATAFILES_FOLDER;
         this.compiledClassesZipFiles = coverageFiles.toString() + File.separator + Jenkins.COMPILED_CLASSES_FOLDER;
         this.sourcesZipFiles = coverageFiles.toString() + File.separator + Jenkins.SOURCE_FILES_FOLDER;
@@ -62,21 +63,19 @@ public class CoverageCalculator {
      *
      * @throws IOException If execution data files cannot be found, loaded or the merged data file cannot be saved
      */
-    public void mergeDataFiles() throws IOException {
+    public void mergeDataFiles(ArrayList<String> jacocoDataFiles) throws IOException {
 
-        /* Get an iterator for all jacoco data files in the directory */
-        String[] dataFileExtension = {Coverage.DATA_FILE_EXTENSION};
-        Iterator<File> dataFiles = (FileUtils.listFiles(new File(this.jacocoDatafiles), dataFileExtension, true)).iterator();
+        if (jacocoDataFiles.size() > 0) {
+            for (String dataFilePath : jacocoDataFiles) {
+                File dataFile = new File(dataFilePath);
+                this.dataFileLoader.load(dataFile);
+            }
 
-        if (!dataFiles.hasNext()) throw new IOException("Zero jacoco data files available");
-
-        while (dataFiles.hasNext()) {
-            this.dataFileLoader.load(dataFiles.next());
+            String mergedDataFilePath = this.workspace + File.separator + Coverage.MERGED_JACOCO_DATA_FILE;
+            this.dataFileLoader.save(new File(mergedDataFilePath), false);
+        } else {
+            log.error("Cannot find jacoco data files to perform merge operation");
         }
-
-        String mergedDataFilePath = this.jacocoDatafiles + File.separator + General.STEP_BACK + Coverage.MERGED_JACOCO_DATA_FILE;
-        this.dataFileLoader.save(new File(mergedDataFilePath), false);
-
     }
 
     /**
@@ -87,28 +86,13 @@ public class CoverageCalculator {
      */
     private ComponentCoverage getComponentCoverageData(String component) throws IOException {
 
-        File componentClassesZipFile = new File(
-                this.compiledClassesZipFiles + File.separator + component + File.separator + Jenkins.COMPILED_CLASSES_FILE_NAME);
-        File sourcesZipFile = new File(
-                this.sourcesZipFiles + File.separator + component + File.separator + Jenkins.SOURCE_FILE_ZIP);
-        if (!componentClassesZipFile.exists() || !sourcesZipFile.exists()) {
-            throw new IOException("Classes or source files cannot be found");
-        }
-        File classExtractFolder = new File(
-                this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER);
-        File sourceExtractFolder = new File(
-                this.sourcesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_SOURCE_FOLDER);
-        if (!classExtractFolder.exists()) classExtractFolder.mkdirs();
-        if (!sourceExtractFolder.exists()) sourceExtractFolder.mkdirs();
-
-        Unzipper.unzipFile(componentClassesZipFile.toString(), classExtractFolder);
-        Unzipper.unzipFile(sourcesZipFile.toString(), sourceExtractFolder);
+        String jacocoSourcesPath = this.workspace + File.separator + component + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
 
         CoverageBuilder coverageBuilder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(this.dataFileLoader.getExecutionDataStore(), coverageBuilder);
 
         /* Use org folder in the extracted folder as it contain the class files required*/
-        analyzer.analyzeAll(new File(classExtractFolder.toString()
+        analyzer.analyzeAll(new File(jacocoSourcesPath
                 + File.separator + Coverage.CLASSES
                 + File.separator + Coverage.ORG
                 + File.separator + Coverage.WSO2));
@@ -128,16 +112,15 @@ public class CoverageCalculator {
 
         for (String component : productAreaComponents) {
 
-            String classExtractFolder = this.compiledClassesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_CLASS_FOLDER;
-            String sourceExtractFolder = this.sourcesZipFiles + File.separator + component + File.separator + Coverage.EXTRACTED_SOURCE_FOLDER;
+            String jacocoSourcesPath = this.workspace + File.separator + component + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
 
             ApplicationHome home = new ApplicationHome(Application.class);
             String componentName = (new File(component)).getName();
 
             ReportGenerator report = new ReportGenerator();
             report.setExecFileLoader(this.dataFileLoader);
-            report.setClassesDirectory(new File(classExtractFolder + File.separator + Coverage.CLASSES));
-            report.setSourceDirectory(new File(sourceExtractFolder + File.separator + Coverage.SOURCES));
+            report.setClassesDirectory(new File(jacocoSourcesPath + File.separator + Coverage.CLASSES));
+            report.setSourceDirectory(new File(jacocoSourcesPath + File.separator + Coverage.SOURCES));
             report.setReportDirectory(new File(
                     home.getDir()
                             + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY

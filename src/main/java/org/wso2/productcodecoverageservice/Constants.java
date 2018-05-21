@@ -41,6 +41,10 @@ public class Constants {
         public static final String JENKINS_SERVER_URL = "jenkins.server.URL";
         public static final String SOURCE_FILES_FOLDER = "sourceFiles";
         public static final String SOURCE_FILE_ZIP = "sources.zip";
+        public static final String JACOCO_SOURCES_FILE_ZIP = "jacoco_sources.zip";
+        public static final String COVERAGE_SOURCES_TEMP_FOLDER = "sources_temp";
+        public static final String JACOCO_RESOURCES_ZIP = "jacoco/resources.zip";
+        public static final String EXTRACTED_JACOCO_FOLDER = "jacocoResources";
     }
 
     public static class Coverage {
@@ -51,7 +55,7 @@ public class Constants {
         public static final String EXTRACTED_CLASS_FOLDER = "extractedClasses";
         public static final String POST_COVERAGE_REQUEST = "/product-coverage-service/code-coverage";
         public static final String EXTRACTED_SOURCE_FOLDER = "extractedSources";
-        public static final String COVERAGE_REPORTS_DIRECTORY = "Coverage Reports";
+        public static final String COVERAGE_REPORTS_DIRECTORY = "static";
         public static final String CLASSES = "classes";
         public static final String SOURCES = "sources";
         public static final String ORG = "org";
@@ -75,5 +79,7 @@ public class Constants {
         public static final String BASIC_AUTH_USER_NAME = "auth.user.name";
         public static final String BASIC_AUTH_USER_PASSWORD = "auth.user.password";
         public static final String BASIC_AUTH_ROLE = "USER";
+        public static final String HTTP = "http://";
+        public static final String HTTPS = "https://";
     }
 }

@@ -95,11 +95,11 @@ public class CodeCoverageController {
         JenkinsServer jenkins = new JenkinsServer();
         try {
             jenkins.setProductAreaJenkinsJobs(productArea.getComponents());
-            jenkins.downloadCoverageFiles();
+            ArrayList<String> jacocoDataFiles = jenkins.downloadCoverageFiles();
 
             CoverageCalculator coverageCalculator = new CoverageCalculator(jenkins.getTemporaryProductAreaWorkspace(), productArea.getProductId());
             log.info("Merging retrieved jacoco data files");
-            coverageCalculator.mergeDataFiles();
+            coverageCalculator.mergeDataFiles(jacocoDataFiles);
             productCodeCoverage = coverageCalculator.getProductCoverageData(productArea.getComponents());
             log.info("Generating coverage reports");
             coverageCalculator.generateCoverageReports(productArea.getComponents());
