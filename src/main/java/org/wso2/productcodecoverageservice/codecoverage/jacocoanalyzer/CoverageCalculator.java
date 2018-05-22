@@ -31,10 +31,12 @@ import org.wso2.productcodecoverageservice.Constants.Jenkins;
 import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Properties;
 
 /*
  A Processor for jacoco and repository build files for code coverage
@@ -112,10 +114,13 @@ public class CoverageCalculator {
 
         for (String component : productAreaComponents) {
 
-            String jacocoSourcesPath = this.workspace + File.separator + component + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
+            String[] componentSplitted = component.split(General.URL_SEPARATOR);
+            String jobName = componentSplitted[componentSplitted.length - 1];
+
+            String jacocoSourcesPath = this.workspace + File.separator + jobName + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
 
             ApplicationHome home = new ApplicationHome(Application.class);
-            String componentName = (new File(component)).getName();
+            String componentName = (new File(jobName)).getName();
 
             ReportGenerator report = new ReportGenerator();
             report.setExecFileLoader(this.dataFileLoader);
@@ -129,7 +134,7 @@ public class CoverageCalculator {
 
             try {
                 report.createReport();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.warn("Error creating report for " + componentName + ". Cleaning generated files");
                 try {
                     FileUtils.cleanDirectory(report.getReportDirectory());
@@ -145,21 +150,37 @@ public class CoverageCalculator {
      *
      * @return A HashMap containing coverage information for each of the product area component
      */
-    public HashMap<String, ComponentCoverage> getProductCoverageData(String[] productAreaComponents) {
+    public HashMap<String, ComponentCoverage> getProductCoverageData(String[] productAreaComponents) throws IOException {
 
         HashMap<String, ComponentCoverage> productCoverageData = new HashMap<>();
+        ApplicationHome home = new ApplicationHome(Application.class);
+        Properties properties = new Properties();
+        properties.load(new FileReader(home.getDir() + File.separator + General.PROPERTIES_PATH));
+
+        String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
 
         for (String eachComponent : productAreaComponents) {
+
+            String[] jobNameSplitted = eachComponent.split(General.URL_SEPARATOR);
+            String jobName = jobNameSplitted[jobNameSplitted.length - 1];
+            boolean skip = false;
+            for (String skippedComponent : skippingComponents) {
+                if (jobName.contains(skippedComponent)) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) {
+                log.info("Skipping coverage data for " + eachComponent);
+                continue;
+            }
             log.info("Calculating coverage data for " + eachComponent);
             try {
-                ComponentCoverage componentCoverageData = getComponentCoverageData(eachComponent);
+                ComponentCoverage componentCoverageData = getComponentCoverageData(jobName);
                 /*
                 As each component is in the format of 'folder_name/job_name', format it and use only the job name
                  */
-                String[] eachComponentSplit = eachComponent.split(General.URL_SEPARATOR);
-                String eachComponentJobName = eachComponentSplit[eachComponentSplit.length - 1];
-
-                productCoverageData.put(eachComponentJobName, componentCoverageData);
+                productCoverageData.put(jobName, componentCoverageData);
             } catch (IOException e) {
                 log.info("Skipping " + eachComponent + " due to coverage calculation error");
             }

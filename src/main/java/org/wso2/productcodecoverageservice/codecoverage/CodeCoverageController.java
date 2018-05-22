@@ -19,14 +19,11 @@
 package org.wso2.productcodecoverageservice.codecoverage;
 
 import org.apache.log4j.Logger;
-import org.springframework.boot.system.ApplicationHome;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.wso2.productcodecoverageservice.Application;
 import org.wso2.productcodecoverageservice.Constants.Coverage;
-import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Info;
 import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.ComponentCoverage;
 import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.CoverageCalculator;
@@ -36,12 +33,9 @@ import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductAreaCo
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.Products;
 import org.wso2.productcodecoverageservice.codecoverage.jsonobject.ProductsCodeCoverage;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Properties;
 
 @RestController
 public class CodeCoverageController {
@@ -58,10 +52,9 @@ public class CodeCoverageController {
 
             ArrayList<ProductAreaCodeCoverage> productAreaCodeCoverages = new ArrayList<>();
             for (ProductArea eachProductArea : products.getProductAreas()) {
-                ProductAreaCodeCoverage productAreaCodeCoverage;
                 try {
                     log.info("Calculating coverage data for :- ProductID = " + eachProductArea.getProductId());
-                    productAreaCodeCoverage = getProductAreaCodeCoverage(eachProductArea);
+                    ProductAreaCodeCoverage productAreaCodeCoverage = getProductAreaCodeCoverage(eachProductArea);
                     productAreaCodeCoverages.add(productAreaCodeCoverage);
                 } catch (Exception e) {
 
@@ -76,9 +69,12 @@ public class CodeCoverageController {
                 }
             }
 
-            ProductAreaCodeCoverage[] productAreaCodeCoveragesList = productAreaCodeCoverages.toArray(new ProductAreaCodeCoverage[productAreaCodeCoverages.size()]);
-            productsCodeCoverage.setProductAreas(productAreaCodeCoveragesList);
-
+            if (productAreaCodeCoverages.size() != 0) {
+                ProductAreaCodeCoverage[] productAreaCodeCoveragesList = productAreaCodeCoverages.toArray(new ProductAreaCodeCoverage[productAreaCodeCoverages.size()]);
+                productsCodeCoverage.setProductAreas(productAreaCodeCoveragesList);
+            } else {
+                productsCodeCoverage.setProductAreas(null);
+            }
             return productsCodeCoverage;
         } else {
             return new ProductsCodeCoverage("Invalid request data");
@@ -105,28 +101,11 @@ public class CodeCoverageController {
             coverageCalculator.generateCoverageReports(productArea.getComponents());
 
             /* Calculate overall code coverage value for the product area*/
-            ApplicationHome home = new ApplicationHome(Application.class);
-            Properties properties = new Properties();
-            String[] skippingComponents;
-
-            try (FileInputStream propertiesStream = new FileInputStream(home.getDir() + File.separator + General.PROPERTIES_PATH)) {
-                properties.load(propertiesStream);
-                skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
-            }
 
             for (String productAreaComponent : productCodeCoverage.keySet()) {
                 /*
                 Skip the component if it's not relevant to the code coverage calculation
                  */
-                boolean skip = false;
-                for (String skippedComponent : skippingComponents) {
-                    if (productAreaComponent.contains(skippedComponent)) {
-                        skip = true;
-                        break;
-                    }
-                }
-                if (skip) continue;
-
                 ComponentCoverage componentCoverage = productCodeCoverage.get(productAreaComponent);
 
                 long componentLinesToCover = Long.parseLong(componentCoverage.getComponentLinesToCover());

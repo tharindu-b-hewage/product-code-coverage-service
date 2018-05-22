@@ -30,6 +30,7 @@ import org.jacoco.report.html.HTMLFormatter;
 import org.wso2.productcodecoverageservice.Constants;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -39,6 +40,28 @@ class ReportGenerator {
     private ExecFileLoader execFileLoader;
     private File sourceDirectory;
     private File classesDirectory;
+
+    public static void main(String[] args) throws IOException {
+
+        String root = "/home/tharindu/Desktop/apim_test";
+
+        ExecFileLoader loader = new ExecFileLoader();
+        loader.load(new FileInputStream("/home/tharindu/Desktop/apim_test/product_exec/jacoco-data-merge-local.exec"));
+        //loader.load(new FileInputStream(root + File.separator + "carbon_exec/jacoco.exec"));
+        //loader.load(new FileInputStream(root + File.separator + "merged_exec/data-merged.exec"));
+
+        ReportGenerator report = new ReportGenerator();
+        report.setClassesDirectory(new File("/home/tharindu/Desktop/apim_test/carbon-apim-6x_new/jacocoResources/classes"));
+
+        report.setExecFileLoader(loader);
+        report.setSourceDirectory(new File("/home/tharindu/Desktop/apim_test/carbon-apim-6x_new/jacocoResources/sources"));
+
+        //report.setReportDirectory(new File(root + File.separator + "carbon_merged_report"));
+        //report.setReportDirectory(new File(root + File.separator + "carbon_product_report"));
+        report.setReportDirectory(new File(root + File.separator + "APIProviderImpl_test/local"));
+
+        report.createReportAll();
+    }
 
     public void setClassesDirectory(File classesDirectory) {
 
@@ -83,6 +106,25 @@ class ReportGenerator {
         // source directory = org.wso2.component_name.*
         String modulesPath = this.classesDirectory + File.separator + Constants.Coverage.ORG + File.separator + Constants.Coverage.WSO2;
         traverseAndGroupModules(modulesPath, visitor);
+
+        visitor.visitEnd();
+    }
+
+    public void createReportAll() throws IOException {
+
+        final HTMLFormatter htmlFormatter = new HTMLFormatter();
+        final IReportVisitor visitor = htmlFormatter
+                .createVisitor(new FileMultiReportOutput(reportDirectory));
+
+        // Initialize the report with all of the execution and session
+        // information. At this point the report doesn't know about the
+        // structure of the report being created
+        visitor.visitInfo(execFileLoader.getSessionInfoStore().getInfos(),
+                execFileLoader.getExecutionDataStore().getContents());
+
+        IBundleCoverage bundleCoverage = getBundleCoverage(classesDirectory);
+        visitor.visitBundle(bundleCoverage, new DirectorySourceFileLocator(
+                this.sourceDirectory, "utf-8", 4));
 
         visitor.visitEnd();
     }
