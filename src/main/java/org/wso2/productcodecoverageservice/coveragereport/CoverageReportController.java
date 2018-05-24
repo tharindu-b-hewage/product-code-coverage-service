@@ -33,52 +33,70 @@ import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
 import org.wso2.productcodecoverageservice.coveragereport.jsonobject.CoverageReport;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
 @RestController
 public class CoverageReportController {
 
+    private static final Logger log = Logger.getLogger(CodeCoverageController.class);
     @Autowired
     Environment environment;
 
-    private static final Logger log = Logger.getLogger(CodeCoverageController.class);
+    /**
+     * Get download information of a hosted coverage report for a particular product
+     *
+     * @param productID     ID relevant to the product area
+     * @param componentName Job name in the jenkins server relevant to the product area component
+     * @param reportType    Either to get a html or xml report information
+     * @return A CoverageReport object with the hosted server information
+     * @throws IOException Unable to read the application.properties file from the classpath
+     */
     @RequestMapping(value = {Report.GET_COVERAGE_REPORT_REQUEST}, method = {RequestMethod.GET})
     public CoverageReport getComponentCoverageReport(
             @RequestParam(value = Report.PRODUCT_ID) String productID,
-            @RequestParam(value = Report.COMPONENT_NAME) String componentName) {
+            @RequestParam(value = Report.COMPONENT_NAME) String componentName,
+            @RequestParam(value = Report.REPORT_TYPE) String reportType) throws IOException {
 
         ApplicationHome home = new ApplicationHome(Application.class);
         String coverageReportFolderPath = home.getDir() + File.separator + Constants.Coverage.COVERAGE_REPORTS_DIRECTORY;
 
+        Properties properties = new Properties();
+        properties.load(new FileReader(home.getDir() + File.separator + Constants.General.PROPERTIES_PATH));
+
+        String reportFile;
+        switch (reportType) {
+
+            case Report.HTML:
+                reportFile = Report.HTML_INDEX_FILE;
+                break;
+            case Report.XML:
+                reportFile = Constants.Coverage.XML_REPORT_FILE;
+                break;
+            default:
+                return new CoverageReport(null, componentName, "Invalid report type");
+        }
+
         String coverageReportPath = coverageReportFolderPath
                 + File.separator + productID
                 + File.separator + componentName
-                + File.separator + Report.HTML_INDEX_FILE;
+                + File.separator + reportFile;
         File coverageReportFile = new File(coverageReportPath);
 
-        CoverageReport componentCoverageReport = null;
-        boolean reportPathSuccess = true;
         if (!coverageReportFile.exists()) {
-            reportPathSuccess = false;
-        }
-        try {
-            String coverageReportURL = Constants.General.HTTPS
-                    + InetAddress.getLocalHost().getHostAddress() + ":" + environment.getProperty("local.server.port")
-                    + File.separator + productID
-                    + File.separator + componentName
-                    + File.separator + Report.HTML_INDEX_FILE;
-            componentCoverageReport = new CoverageReport(coverageReportURL, componentName, "Success");
-            log.info("Coverage report path for " + componentName + " is " + componentCoverageReport.getReportPath());
-        } catch (UnknownHostException e) {
-            reportPathSuccess = false;
+            return new CoverageReport(null, componentName, "Report missing");
         }
 
-        if (reportPathSuccess) {
-            return componentCoverageReport;
-        }
+        String hostAddress = properties.getProperty(Report.REPORT_HOST_IP);
+        String coverageReportURL = Constants.General.HTTPS
+                + hostAddress + ":" + environment.getProperty("local.server.port")
+                + Constants.General.URL_SEPARATOR + productID
+                + Constants.General.URL_SEPARATOR + componentName
+                + Constants.General.URL_SEPARATOR + reportFile;
 
-        log.warn("Coverage report for " + componentName + " is not found");
-        return new CoverageReport(null, componentName, "Report missing");
+        CoverageReport componentCoverageReport = new CoverageReport(coverageReportURL, componentName, "Success");
+        log.info("Coverage report sent : " + componentName + " is " + componentCoverageReport.getReportPath());
+        return componentCoverageReport;
     }
 }

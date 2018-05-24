@@ -60,6 +60,7 @@ public class Constants {
         public static final String SOURCES = "sources";
         public static final String ORG = "org";
         public static final String WSO2 = "wso2";
+        public static final String XML_REPORT_FILE = "jacoco.xml";
     }
 
     public static class Report {
@@ -68,6 +69,11 @@ public class Constants {
         public static final String PRODUCT_ID = "productID";
         public static final String COMPONENT_NAME = "componentName";
         public static final String HTML_INDEX_FILE = "index.html";
+        public static final String REPORT_HOST_IP = "coverage.report.host.ip";
+        public static final String DISABLE_MANUAL_HOST_IP = "null";
+        public static final String REPORT_TYPE = "reportType";
+        public static final String HTML = "html";
+        public static final String XML = "xml";
     }
 
     public static class General {

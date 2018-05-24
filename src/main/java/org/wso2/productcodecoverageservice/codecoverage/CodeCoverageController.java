@@ -41,6 +41,7 @@ import java.util.HashMap;
 public class CodeCoverageController {
 
     private static final Logger log = Logger.getLogger(CodeCoverageController.class);
+
     private static final String serviceInfo = Info.MESSAGE;
 
     @RequestMapping(value = {Coverage.POST_COVERAGE_REQUEST}, method = {RequestMethod.POST})
@@ -75,8 +76,10 @@ public class CodeCoverageController {
             } else {
                 productsCodeCoverage.setProductAreas(null);
             }
+            log.info("Code coverage calculation is successfully completed");
             return productsCodeCoverage;
         } else {
+            log.error("Code coverage calculation is unsuccessful");
             return new ProductsCodeCoverage("Invalid request data");
         }
     }

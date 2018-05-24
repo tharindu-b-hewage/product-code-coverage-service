@@ -26,12 +26,16 @@ import org.jacoco.report.DirectorySourceFileLocator;
 import org.jacoco.report.FileMultiReportOutput;
 import org.jacoco.report.IReportGroupVisitor;
 import org.jacoco.report.IReportVisitor;
+import org.jacoco.report.MultiReportVisitor;
 import org.jacoco.report.html.HTMLFormatter;
+import org.jacoco.report.xml.XMLFormatter;
 import org.wso2.productcodecoverageservice.Constants;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 class ReportGenerator {
@@ -93,21 +97,33 @@ class ReportGenerator {
         // Create a concrete report visitor based on some supplied
         // configuration. In this case we use the defaults
         final HTMLFormatter htmlFormatter = new HTMLFormatter();
-        final IReportVisitor visitor = htmlFormatter
-                .createVisitor(new FileMultiReportOutput(reportDirectory));
+        final XMLFormatter xmlFormatter = new XMLFormatter();
+
+        File xmlReport = new File(reportDirectory + File.separator + Constants.Coverage.XML_REPORT_FILE);
+        xmlReport.getParentFile().mkdirs();
+        xmlReport.createNewFile();
+        FileOutputStream xmlReportStream = new FileOutputStream(xmlReport);
+
+        ArrayList<IReportVisitor> reportVisitors = new ArrayList<>();
+        reportVisitors.add(htmlFormatter
+                .createVisitor(new FileMultiReportOutput(reportDirectory)));
+        reportVisitors.add(xmlFormatter
+                .createVisitor(xmlReportStream));
+
+        MultiReportVisitor multiReportVisitor = new MultiReportVisitor(reportVisitors);
 
         // Initialize the report with all of the execution and session
         // information. At this point the report doesn't know about the
         // structure of the report being created
-        visitor.visitInfo(execFileLoader.getSessionInfoStore().getInfos(),
+        multiReportVisitor.visitInfo(execFileLoader.getSessionInfoStore().getInfos(),
                 execFileLoader.getExecutionDataStore().getContents());
 
         // Find how many groups are needed to be created at the beginning stage
         // source directory = org.wso2.component_name.*
         String modulesPath = this.classesDirectory + File.separator + Constants.Coverage.ORG + File.separator + Constants.Coverage.WSO2;
-        traverseAndGroupModules(modulesPath, visitor);
+        traverseAndGroupModules(modulesPath, multiReportVisitor);
 
-        visitor.visitEnd();
+        multiReportVisitor.visitEnd();
     }
 
     public void createReportAll() throws IOException {
