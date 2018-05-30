@@ -61,12 +61,21 @@ public class Constants {
         public static final String ORG = "org";
         public static final String WSO2 = "wso2";
         public static final String XML_REPORT_FILE = "jacoco.xml";
+        public static final String PACKAGE = "package";
+        public static final String NAME = "name";
+        public static final String SOURCE_FILE = "sourcefile";
+        public static final String COUNTER = "counter";
+        public static final String TYPE = "type";
+        public static final String MISSED = "missed";
+        public static final String COVERED = "covered";
     }
 
     public static class Report {
 
         public static final String GET_COVERAGE_REPORT_REQUEST = "/product-coverage-service/coverage-report";
+        public static final String GET_SOURCE_FILE_REPORT_REQUEST = "/product-coverage-service/source-file-report";
         public static final String PRODUCT_ID = "productID";
+        public static final String SOURCE_FILE_DATA = "sourceFileData";
         public static final String COMPONENT_NAME = "componentName";
         public static final String HTML_INDEX_FILE = "index.html";
         public static final String REPORT_HOST_IP = "coverage.report.host.ip";
