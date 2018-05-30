@@ -20,25 +20,25 @@ package org.wso2.productcodecoverageservice.sourcefilereport.jsonobject;
 
 public class SourceFileReport {
 
-    private final String componentName;
+    private final String sourceFile;
     private final InstructionCoverageData instructionCoverageData;
     private final BranchCoverageData branchCoverageData;
     private final LineCoverageData lineCoverageData;
     private final MethodCoverageData methodCoverageData;
 
-    public SourceFileReport(String componentName, InstructionCoverageData instructionCoverageData,
+    public SourceFileReport(String sourceFile, InstructionCoverageData instructionCoverageData,
                             BranchCoverageData branchCoverageData, LineCoverageData lineCoverageData,
                             MethodCoverageData methodCoverageData) {
-        this.componentName = componentName;
+        this.sourceFile = sourceFile;
         this.instructionCoverageData = instructionCoverageData;
         this.branchCoverageData = branchCoverageData;
         this.lineCoverageData = lineCoverageData;
         this.methodCoverageData = methodCoverageData;
     }
 
-    public String getComponentName() {
+    public String getSourceFile() {
 
-        return componentName;
+        return sourceFile;
     }
 
     public InstructionCoverageData getInstructionCoverageData() {

@@ -133,7 +133,7 @@ public class SourceFileReportController {
                             branchCoverageReport = new SourceFileReport.BranchCoverageData
                                     (branchCoverageData[0], branchCoverageData[1]);
                         }
-                        list.add(new SourceFileReport(data.getComponentName(), instructionCoverageReport,
+                        list.add(new SourceFileReport(key, instructionCoverageReport,
                                 branchCoverageReport, lineCoverageReport, methodCoverageReport));
                     }
                 }
