@@ -145,70 +145,6 @@ public class JenkinsServer {
     }
 
     /**
-     * Download a given Jacoco data file from the last successful build in Jenkins server
-     *
-     * @param jenkinsJob Name in the jenkins for a required repository
-     */
-    private void downloadJacocoDataFile(String jenkinsJob) throws IOException {
-
-        String jacocoDataFileRequestURL = this.jenkinsServerURL
-                + General.URL_SEPARATOR
-                + jenkinsJob
-                + General.URL_SEPARATOR
-                + Jenkins.LAST_SUCCESSFUL_BUILD
-                + General.URL_SEPARATOR
-                + Jenkins.JACOCO_DATA_FILE;
-
-        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
-        String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
-        String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
-                + File.separator
-                + Jenkins.JACOCO_DATAFILES_FOLDER
-                + File.separator
-                + jenkinsJobName
-                + File.separator
-                + Jenkins.JACOCO_DATAFILE_NAME;
-        File dataFileLocation = new File(dataFileSavePath);
-
-        /* Clear existing file */
-        log.warn("Deleting existing " + dataFileLocation);
-        if (dataFileLocation.exists()) FileUtils.forceDelete(dataFileLocation);
-
-        log.info("Downloading " + jacocoDataFileRequestURL);
-
-        downloadFile(jacocoDataFileRequestURL, dataFileLocation, this.jenkinsAuthString);
-    }
-
-    private void downloadSourcesZip(String jenkinsJob) throws IOException {
-
-        String sourcesZipRequestURL = this.jenkinsServerURL
-                + General.URL_SEPARATOR
-                + jenkinsJob
-                + General.URL_SEPARATOR
-                + Jenkins.LAST_SUCCESSFUL_BUILD
-                + General.URL_SEPARATOR
-                + Jenkins.SOURCES_ZIP;
-
-        String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
-        String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];
-        String dataFileSavePath = this.temporaryProductAreaWorkspace.toAbsolutePath()
-                + File.separator
-                + Jenkins.SOURCE_FILES_FOLDER
-                + File.separator
-                + jenkinsJobName
-                + File.separator
-                + Jenkins.SOURCE_FILE_ZIP;
-        File sourcesZip = new File(dataFileSavePath);
-
-        /* Clear existing file */
-        if (sourcesZip.exists()) FileUtils.forceDelete(sourcesZip);
-
-        log.info("Downloading " + sourcesZipRequestURL);
-
-        downloadFile(sourcesZipRequestURL, sourcesZip, this.jenkinsAuthString);
-    }
-
-    /**
      * Download all jacoco data files from the last successful build in Jenkins server
      */
     public ArrayList<String> downloadCoverageFiles() {
@@ -217,15 +153,12 @@ public class JenkinsServer {
         for (String eachJenkinsJob : this.productAreaJenkinsJobs) {
 
             try {
-                //downloadJacocoDataFile(eachJenkinsJob);
-                //downloadCompiledClassesZip(eachJenkinsJob);
-                //downloadSourcesZip(eachJenkinsJob);
                 String jacocoDataFile = downloadJacocoSources(eachJenkinsJob);
                 if (jacocoDataFile != null) {
                     jacocoDataFiles.add(jacocoDataFile);
                 }
             } catch (IOException e) {
-                log.warn("Error while downloading coverage files from jenkins. Skipping " + eachJenkinsJob);
+                log.error("Error while downloading coverage files from jenkins. Skipping " + eachJenkinsJob);
             } catch (Exception e) {
                 log.fatal("Server connection error. Skipping " + eachJenkinsJob);
             }

@@ -67,7 +67,6 @@ public class CoverageReportController {
 
         String reportFile;
         switch (reportType) {
-
             case Report.HTML:
                 reportFile = Report.HTML_INDEX_FILE;
                 break;
@@ -90,7 +89,7 @@ public class CoverageReportController {
 
         String hostAddress = properties.getProperty(Report.REPORT_HOST_IP);
         String coverageReportURL = Constants.General.HTTPS
-                + hostAddress + ":" + environment.getProperty("local.server.port")
+                + hostAddress
                 + Constants.General.URL_SEPARATOR + productID
                 + Constants.General.URL_SEPARATOR + componentName
                 + Constants.General.URL_SEPARATOR + reportFile;

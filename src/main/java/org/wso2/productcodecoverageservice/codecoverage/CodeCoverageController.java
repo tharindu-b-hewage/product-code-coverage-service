@@ -53,20 +53,30 @@ public class CodeCoverageController {
 
             ArrayList<ProductAreaCodeCoverage> productAreaCodeCoverages = new ArrayList<>();
             for (ProductArea eachProductArea : products.getProductAreas()) {
+                String productAreaID = null;
                 try {
-                    log.info("Calculating coverage data for :- ProductID = " + eachProductArea.getProductId());
+                    productAreaID = eachProductArea.getProductId();
+                    log.info("Calculating coverage data for :- ProductID = " + productAreaID);
                     ProductAreaCodeCoverage productAreaCodeCoverage = getProductAreaCodeCoverage(eachProductArea);
                     productAreaCodeCoverages.add(productAreaCodeCoverage);
                 } catch (Exception e) {
-
-                    /* Add null for products areas caused errors. This is temporary and should be fixed soon*/
-                    ProductAreaCodeCoverage badProductAreaCoverage = new ProductAreaCodeCoverage(eachProductArea.getProductId(),
-                            null,
-                            null,
-                            null);
+                    ProductAreaCodeCoverage badProductAreaCoverage;
+                    if (eachProductArea == null) {
+                        log.error("Invalid request data. Could not find productArea information");
+                        badProductAreaCoverage = new ProductAreaCodeCoverage(
+                                null,
+                                null,
+                                null,
+                                null);
+                    } else {
+                        log.error("Error occured while calculating coverage for product area " + productAreaID);
+                        badProductAreaCoverage = new ProductAreaCodeCoverage(
+                                productAreaID,
+                                null,
+                                null,
+                                null);
+                    }
                     productAreaCodeCoverages.add(badProductAreaCoverage);
-                    log.warn("Error occurred during coverage data generation in ProductID="
-                            + eachProductArea.getProductId());
                 }
             }
 
