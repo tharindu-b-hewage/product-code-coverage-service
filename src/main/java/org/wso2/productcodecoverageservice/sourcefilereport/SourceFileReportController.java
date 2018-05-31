@@ -76,9 +76,21 @@ public class SourceFileReportController {
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             DocumentBuilder documentBuilder = factory.newDocumentBuilder();
             for (SourceFileJson data : sourceFileJsonObject.getSourceFileJsons()) {
+                String componentName = data.getComponentName();
+                switch (componentName) {
+                    case "carbon-apimgt":
+                        componentName = "carbon-apimgt_6.x";
+                        break;
+                    case "product-apim":
+                        componentName = "product-apim_2.x";
+                        break;
+                    case "analytics-apim":
+                        componentName = "analytics-apim_2.x";
+                        break;
+                }
                 String sourceXmlPath = coverageReportFolderPath
                         + File.separator + data.getProductId()
-                        + File.separator + data.getComponentName()
+                        + File.separator + componentName
                         + File.separator + Constants.Coverage.XML_REPORT_FILE;
                 File sourceXml = new File(sourceXmlPath);
                 if (sourceXml.exists()) {
