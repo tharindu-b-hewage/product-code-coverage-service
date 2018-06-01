@@ -37,6 +37,7 @@ public class Constants {
         public static final String JACOCO_DATAFILES_FOLDER = "jacocoDataFiles";
         public static final String COMPILED_CLASSES_FOLDER = "compiledClasses";
         public static final String JACOCO_DATAFILE_NAME = "jacoco.exec";
+        public static final String JACOCO_CLASS_FOLDER_NAME = "classes";
         public static final String COMPILED_CLASSES_FILE_NAME = "classes.zip";
         public static final String JENKINS_SERVER_URL = "jenkins.server.URL";
         public static final String SOURCE_FILES_FOLDER = "sourceFiles";
@@ -61,6 +62,7 @@ public class Constants {
         public static final String ORG = "org";
         public static final String WSO2 = "wso2";
         public static final String XML_REPORT_FILE = "jacoco.xml";
+        public static final String COMPILED_CLASS_FOLDER = "compiled-files";
         public static final String PACKAGE = "package";
         public static final String NAME = "name";
         public static final String SOURCE_FILE = "sourcefile";
@@ -68,6 +70,11 @@ public class Constants {
         public static final String TYPE = "type";
         public static final String MISSED = "missed";
         public static final String COVERED = "covered";
+        public static final String LINE = "LINE";
+        public static final String METHOD = "METHOD";
+        public static final String INSTRUCTION = "INSTRUCTION";
+        public static final String BRANCH = "BRANCH";
+        public static final String ISSUES = "issues";
     }
 
     public static class Report {
@@ -96,5 +103,6 @@ public class Constants {
         public static final String BASIC_AUTH_ROLE = "USER";
         public static final String HTTP = "http://";
         public static final String HTTPS = "https://";
+        public static final String FINDBUGS_FOLDER_PATH = "findbugs.folder.path";
     }
 }
