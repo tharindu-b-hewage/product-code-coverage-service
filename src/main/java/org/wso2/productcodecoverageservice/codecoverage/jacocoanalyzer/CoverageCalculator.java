@@ -131,9 +131,12 @@ public class CoverageCalculator {
                             + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
                             + File.separator + this.productID
                             + File.separator + componentName));
-
             try {
                 report.createReport();
+                FileUtils.copyDirectory(new File(jacocoSourcesPath + File.separator + Coverage.CLASSES), new File(home.getDir()
+                        + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
+                        + File.separator + this.productID
+                        + File.separator + componentName + File.separator + "compiled-files"));
             } catch (Exception e) {
                 log.warn("Error creating report for " + componentName + ". Cleaning generated files");
                 try {

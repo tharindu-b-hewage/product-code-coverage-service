@@ -39,8 +39,7 @@ import org.wso2.productcodecoverageservice.sourcefilereport.jsonobject.SourceFil
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Properties;
@@ -61,42 +60,49 @@ public class SourceFileReportController {
     @RequestMapping(value = {Report.GET_SOURCE_FILE_REPORT_REQUEST}, method = {RequestMethod.POST})
     public ArrayList<SourceFileReport> getComponentCoverageReport(@RequestBody SourceFileJsonObject sourceFileJsonObject) {
 
+        log.info("Initializing source file analyzing process.");
+
         ApplicationHome home = new ApplicationHome(Application.class);
+
         String coverageReportFolderPath = home.getDir() + File.separator + Constants.Coverage.COVERAGE_REPORTS_DIRECTORY;
 
         HashMap<String, HashMap<String, String[]>> fileData = new HashMap<>();
+        HashMap<String, String> classFilePaths = new HashMap<>();
         ArrayList<SourceFileReport> list = new ArrayList<>();
 
         Properties properties = new Properties();
         try {
             properties.load(new FileReader(home.getDir() + File.separator + Constants.General.PROPERTIES_PATH));
-            // xml
+            String findbugsPath = properties.getProperty(Constants.General.FINDBUGS_FOLDER_PATH);
+            log.info("Findbugs folder path is set to " + findbugsPath + ".");
+            // process xml
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             DocumentBuilder documentBuilder = factory.newDocumentBuilder();
             for (SourceFileJson data : sourceFileJsonObject.getSourceFileJsons()) {
-                String componentName = data.getComponentName();
-                switch (componentName) {
-                    case "carbon-apimgt":
-                        componentName = "carbon-apimgt_6.x";
-                        break;
-                    case "product-apim":
-                        componentName = "product-apim_2.x";
-                        break;
-                    case "analytics-apim":
-                        componentName = "analytics-apim_2.x";
-                        break;
-                }
-                String sourceXmlPath = coverageReportFolderPath
-                        + File.separator + data.getProductId()
-                        + File.separator + componentName
-                        + File.separator + Constants.Coverage.XML_REPORT_FILE;
-                File sourceXml = new File(sourceXmlPath);
-                if (sourceXml.exists()) {
-                    Document document = documentBuilder.parse(sourceXml);
-                    String key = data.getPackageName() + File.separator + data.getClassName();
-                    if (!fileData.containsKey(key)) {
+                String key = data.getPackageName() + File.separator + data.getClassName();
+                if (!fileData.containsKey(key)) {
+                    String componentName = data.getComponentName();
+                    switch (componentName) {
+                        case "carbon-apimgt":
+                            componentName = "carbon-apimgt_6.x";
+                            break;
+                        case "product-apim":
+                            componentName = "product-apim_2.x";
+                            break;
+                        case "analytics-apim":
+                            componentName = "analytics-apim_2.x";
+                            break;
+                    }
+                    String compiledClassesFolderPath = coverageReportFolderPath + File.separator + data.getProductId()
+                            + File.separator + componentName + File.separator + Constants.Coverage.COMPILED_CLASS_FOLDER;
+                    getClassFilesPaths(new File(compiledClassesFolderPath), compiledClassesFolderPath, classFilePaths);
+                    String sourceXmlPath = coverageReportFolderPath + File.separator + data.getProductId()
+                            + File.separator + componentName + File.separator + Constants.Coverage.XML_REPORT_FILE;
+                    File sourceXml = new File(sourceXmlPath);
+                    if (sourceXml.exists()) {
+                        Document document = documentBuilder.parse(sourceXml);
                         NodeList packageNodes = document.getElementsByTagName(Constants.Coverage.PACKAGE);
                         for (int i = 0; i < packageNodes.getLength(); i++) {
                             Element packageElement = (Element) packageNodes.item(i);
@@ -105,6 +111,8 @@ public class SourceFileReportController {
                                 Element sourceElement = (Element) sourceNodes.item(j);
                                 NodeList counterNodes = sourceElement.getElementsByTagName(Constants.Coverage.COUNTER);
                                 HashMap<String, String[]> sourceFileReport = new HashMap<>();
+                                String sourceName = sourceElement.getAttribute(Constants.Coverage.NAME);
+                                String className = sourceName.replace(".java", ".class");
                                 for (int k = 0; k < counterNodes.getLength(); k++) {
                                     Element dataNode = (Element) counterNodes.item(k);
                                     String type = dataNode.getAttribute(Constants.Coverage.TYPE);
@@ -114,40 +122,49 @@ public class SourceFileReportController {
                                     sourceFileReport.put(type, values);
                                 }
                                 fileData.put(packageElement.getAttribute(Constants.Coverage.NAME) + File.separator +
-                                        sourceElement.getAttribute(Constants.Coverage.NAME), sourceFileReport);
+                                        sourceName, sourceFileReport);
                             }
                         }
                     }
+                }
 
-                    if (fileData.containsKey(key)) {
-                        HashMap sourceData = fileData.get(key);
-                        SourceFileReport.LineCoverageData lineCoverageReport = null;
-                        SourceFileReport.MethodCoverageData methodCoverageReport = null;
-                        SourceFileReport.BranchCoverageData branchCoverageReport = null;
-                        SourceFileReport.InstructionCoverageData instructionCoverageReport = null;
-                        if (sourceData.get("LINE") != null) {
-                            String[] lineCoverageData = (String[]) sourceData.get("LINE");
-                            lineCoverageReport = new SourceFileReport.LineCoverageData
-                                    (lineCoverageData[0], lineCoverageData[1]);
-                        }
-                        if (sourceData.get("METHOD") != null) {
-                            String[] methodCoverageData = (String[]) sourceData.get("METHOD");
-                            methodCoverageReport = new SourceFileReport.MethodCoverageData
-                                    (methodCoverageData[0], methodCoverageData[1]);
-                        }
-                        if (sourceData.get("INSTRUCTION") != null) {
-                            String[] instructionCoverageData = (String[]) sourceData.get("INSTRUCTION");
-                            instructionCoverageReport = new SourceFileReport.InstructionCoverageData
-                                    (instructionCoverageData[0], instructionCoverageData[1]);
-                        }
-                        if (sourceData.get("BRANCH") != null) {
-                            String[] branchCoverageData = (String[]) sourceData.get("BRANCH");
-                            branchCoverageReport = new SourceFileReport.BranchCoverageData
-                                    (branchCoverageData[0], branchCoverageData[1]);
-                        }
-                        list.add(new SourceFileReport(key, instructionCoverageReport,
-                                branchCoverageReport, lineCoverageReport, methodCoverageReport));
+                if (fileData.containsKey(key)) {
+                    log.info("Retrieving coverage data for " + key + ".");
+                    HashMap sourceData = fileData.get(key);
+                    SourceFileReport.LineCoverageData lineCoverageReport = new SourceFileReport
+                            .LineCoverageData("", "");
+                    SourceFileReport.MethodCoverageData methodCoverageReport = new SourceFileReport
+                            .MethodCoverageData("", "");
+                    SourceFileReport.BranchCoverageData branchCoverageReport = new SourceFileReport
+                            .BranchCoverageData("", "");
+                    SourceFileReport.InstructionCoverageData instructionCoverageReport = new SourceFileReport
+                            .InstructionCoverageData("", "");
+
+                    if (sourceData.get(Constants.Coverage.LINE) != null) {
+                        String[] lineCoverageData = (String[]) sourceData.get(Constants.Coverage.LINE);
+                        lineCoverageReport = new SourceFileReport.LineCoverageData
+                                (lineCoverageData[0], lineCoverageData[1]);
                     }
+                    if (sourceData.get(Constants.Coverage.METHOD) != null) {
+                        String[] methodCoverageData = (String[]) sourceData.get(Constants.Coverage.METHOD);
+                        methodCoverageReport = new SourceFileReport.MethodCoverageData
+                                (methodCoverageData[0], methodCoverageData[1]);
+                    }
+                    if (sourceData.get(Constants.Coverage.INSTRUCTION) != null) {
+                        String[] instructionCoverageData = (String[]) sourceData.get(Constants.Coverage.INSTRUCTION);
+                        instructionCoverageReport = new SourceFileReport.InstructionCoverageData
+                                (instructionCoverageData[0], instructionCoverageData[1]);
+                    }
+                    if (sourceData.get(Constants.Coverage.BRANCH) != null) {
+                        String[] branchCoverageData = (String[]) sourceData.get(Constants.Coverage.BRANCH);
+                        branchCoverageReport = new SourceFileReport.BranchCoverageData
+                                (branchCoverageData[0], branchCoverageData[1]);
+                    }
+                    String issues = getIssues(findbugsPath, classFilePaths.get(data.getClassName().replace(".java"
+                            , ".class")));
+                    log.info("Findbugs analysis succesful for " + data.getClassName() + ".");
+                    list.add(new SourceFileReport(key, issues, instructionCoverageReport,
+                            branchCoverageReport, lineCoverageReport, methodCoverageReport));
                 }
             }
         } catch (Exception ex) {
@@ -155,4 +172,52 @@ public class SourceFileReportController {
         }
         return list;
     }
+
+    /**
+     * This method generate a string of findbugs analysis of class
+     *
+     * @param findBugsFolderPath findbugs folderpath
+     * @param classFilePath Path of the class file
+     */
+    public String getIssues(String findBugsFolderPath, String classFilePath) {
+        try {
+            String command = findBugsFolderPath + " analyze -low " + classFilePath;
+            Process findbugsProcess = Runtime.getRuntime().exec(command);
+
+            BufferedReader processOutput = new BufferedReader(new InputStreamReader(findbugsProcess.getInputStream()));
+            String issue;
+            String output = "";
+            while ((issue = processOutput.readLine()) != null) {
+                output += issue + ",";
+            }
+            if (!output.equals("")) {
+                return output.substring(0, output.length() - 1);
+            } else {
+                return output;
+            }
+        } catch (IOException ex) {
+            log.error("Error occured while getting findbugs results." + ex.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * This method collects the paths of class files
+     *
+     * @param sourceFile      path of the file to zip
+     * @param sourceFileName  name of the file to zip
+     * @param classFilesPaths HashMap to store paths
+     */
+    private static void getClassFilesPaths(File sourceFile, String sourceFileName, HashMap<String, String> classFilesPaths) {
+        if (sourceFile.isDirectory()) {
+            File[] subFiles = sourceFile.listFiles();
+            for (File subFile : subFiles) {
+                getClassFilesPaths(subFile, sourceFileName + File.separator + subFile.getName(), classFilesPaths);
+            }
+        } else {
+            classFilesPaths.put(sourceFile.getName(), sourceFile.getAbsolutePath());
+        }
+    }
+
 }
+

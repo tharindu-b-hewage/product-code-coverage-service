@@ -126,13 +126,12 @@ public class JenkinsServer {
         File unzippedFolder = new File(unzippedFolderPath);
         if (!unzippedFolder.exists()) unzippedFolder.mkdirs();
 
-        Unzipper.unzipFile(dataFileSavePath,
-                unzippedFolder);
+        Unzipper.unzipFile(dataFileSavePath, unzippedFolder);
+
         /*
         If jacoco.exec file exists for the component, save the path for merging process
          */
-        String unzippedJacocoExecFilePath = unzippedFolderPath
-                + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER
+        String unzippedJacocoExecFilePath = unzippedFolderPath + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER
                 + File.separator + Jenkins.JACOCO_DATAFILE_NAME;
         if ((new File(unzippedJacocoExecFilePath)).exists()) {
             return unzippedJacocoExecFilePath;
