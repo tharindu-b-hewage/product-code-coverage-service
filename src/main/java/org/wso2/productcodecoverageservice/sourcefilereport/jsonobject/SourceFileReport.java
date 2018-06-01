@@ -18,16 +18,18 @@
 
 package org.wso2.productcodecoverageservice.sourcefilereport.jsonobject;
 
+import java.util.ArrayList;
+
 public class SourceFileReport {
 
     private final String sourceFile;
-    private final String issues;
+    private final ArrayList<String> issues;
     private final InstructionCoverageData instructionCoverageData;
     private final BranchCoverageData branchCoverageData;
     private final LineCoverageData lineCoverageData;
     private final MethodCoverageData methodCoverageData;
 
-    public SourceFileReport(String sourceFile, String issues, InstructionCoverageData instructionCoverageData,
+    public SourceFileReport(String sourceFile, ArrayList<String> issues, InstructionCoverageData instructionCoverageData,
                             BranchCoverageData branchCoverageData, LineCoverageData lineCoverageData,
                             MethodCoverageData methodCoverageData) {
         this.sourceFile = sourceFile;
@@ -43,7 +45,7 @@ public class SourceFileReport {
         return sourceFile;
     }
 
-    public String getIssues() {
+    public ArrayList<String> getIssues() {
 
         return issues;
     }

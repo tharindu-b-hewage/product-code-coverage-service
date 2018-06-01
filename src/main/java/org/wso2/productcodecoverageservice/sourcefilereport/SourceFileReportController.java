@@ -160,10 +160,10 @@ public class SourceFileReportController {
                         branchCoverageReport = new SourceFileReport.BranchCoverageData
                                 (branchCoverageData[0], branchCoverageData[1]);
                     }
-                    String issues = getIssues(findbugsPath, classFilePaths.get(data.getClassName().replace(".java"
+                    ArrayList<String> issueList = getIssues(findbugsPath, classFilePaths.get(data.getClassName().replace(".java"
                             , ".class")));
                     log.info("Findbugs analysis succesful for " + data.getClassName() + ".");
-                    list.add(new SourceFileReport(key, issues, instructionCoverageReport,
+                    list.add(new SourceFileReport(key, issueList, instructionCoverageReport,
                             branchCoverageReport, lineCoverageReport, methodCoverageReport));
                 }
             }
@@ -177,27 +177,23 @@ public class SourceFileReportController {
      * This method generate a string of findbugs analysis of class
      *
      * @param findBugsFolderPath findbugs folderpath
-     * @param classFilePath Path of the class file
+     * @param classFilePath      Path of the class file
      */
-    public String getIssues(String findBugsFolderPath, String classFilePath) {
+    public ArrayList<String> getIssues(String findBugsFolderPath, String classFilePath) {
+        ArrayList<String> issueList = new ArrayList<>();
         try {
             String command = findBugsFolderPath + " analyze -low " + classFilePath;
             Process findbugsProcess = Runtime.getRuntime().exec(command);
 
             BufferedReader processOutput = new BufferedReader(new InputStreamReader(findbugsProcess.getInputStream()));
             String issue;
-            String output = "";
             while ((issue = processOutput.readLine()) != null) {
-                output += issue + ",";
+                issueList.add(issue);
             }
-            if (!output.equals("")) {
-                return output.substring(0, output.length() - 1);
-            } else {
-                return output;
-            }
+            return issueList;
         } catch (IOException ex) {
             log.error("Error occured while getting findbugs results." + ex.getMessage());
-            return "";
+            return issueList;
         }
     }
 
