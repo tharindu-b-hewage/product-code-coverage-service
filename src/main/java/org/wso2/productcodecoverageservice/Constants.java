@@ -75,6 +75,8 @@ public class Constants {
         public static final String INSTRUCTION = "INSTRUCTION";
         public static final String BRANCH = "BRANCH";
         public static final String ISSUES = "issues";
+        public static final String ANALYTICS_PRODUCT = "analytics-";
+        public static final String PRODUCT = "product-";
     }
 
     public static class Report {

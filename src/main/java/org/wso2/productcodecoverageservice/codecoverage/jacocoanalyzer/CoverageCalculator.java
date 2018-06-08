@@ -96,8 +96,7 @@ public class CoverageCalculator {
         /* Use org folder in the extracted folder as it contain the class files required*/
         analyzer.analyzeAll(new File(jacocoSourcesPath
                 + File.separator + Coverage.CLASSES
-                + File.separator + Coverage.ORG
-                + File.separator + Coverage.WSO2));
+                + File.separator + Coverage.ORG));
         /*
         Calculate and prepare output data
          */
@@ -162,20 +161,21 @@ public class CoverageCalculator {
 
         String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
 
+        EachAreaComponent:
         for (String eachComponent : productAreaComponents) {
 
             String[] jobNameSplitted = eachComponent.split(General.URL_SEPARATOR);
             String jobName = jobNameSplitted[jobNameSplitted.length - 1];
-            boolean skip = false;
-            for (String skippedComponent : skippingComponents) {
-                if (jobName.contains(skippedComponent)) {
-                    skip = true;
-                    break;
-                }
-            }
-            if (skip) {
+            if (jobName.startsWith(Coverage.ANALYTICS_PRODUCT) || jobName.startsWith(Coverage.PRODUCT)) {
                 log.info("Skipping coverage data for " + eachComponent);
-                continue;
+                continue EachAreaComponent;
+            } else {
+                for (String skippedComponent : skippingComponents) {
+                    if (jobName.contains(skippedComponent)) {
+                        log.info("Skipping coverage data for " + eachComponent);
+                        continue EachAreaComponent;
+                    }
+                }
             }
             log.info("Calculating coverage data for " + eachComponent);
             try {

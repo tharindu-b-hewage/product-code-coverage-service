@@ -114,7 +114,6 @@ public class CodeCoverageController {
             coverageCalculator.generateCoverageReports(productArea.getComponents());
 
             /* Calculate overall code coverage value for the product area*/
-
             for (String productAreaComponent : productCodeCoverage.keySet()) {
                 /*
                 Skip the component if it's not relevant to the code coverage calculation

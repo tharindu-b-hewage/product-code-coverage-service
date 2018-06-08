@@ -120,7 +120,7 @@ class ReportGenerator {
 
         // Find how many groups are needed to be created at the beginning stage
         // source directory = org.wso2.component_name.*
-        String modulesPath = this.classesDirectory + File.separator + Constants.Coverage.ORG + File.separator + Constants.Coverage.WSO2;
+        String modulesPath = this.classesDirectory + File.separator + Constants.Coverage.ORG;
         traverseAndGroupModules(modulesPath, multiReportVisitor);
 
         multiReportVisitor.visitEnd();
