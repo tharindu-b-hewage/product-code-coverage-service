@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 public class SourceFileReport {
 
+    private final String fileId;
     private final String sourceFile;
     private final ArrayList<String> issues;
     private final InstructionCoverageData instructionCoverageData;
@@ -29,9 +30,10 @@ public class SourceFileReport {
     private final LineCoverageData lineCoverageData;
     private final MethodCoverageData methodCoverageData;
 
-    public SourceFileReport(String sourceFile, ArrayList<String> issues, InstructionCoverageData instructionCoverageData,
+    public SourceFileReport(String fileId, String sourceFile, ArrayList<String> issues, InstructionCoverageData instructionCoverageData,
                             BranchCoverageData branchCoverageData, LineCoverageData lineCoverageData,
                             MethodCoverageData methodCoverageData) {
+        this.fileId = fileId;
         this.sourceFile = sourceFile;
         this.issues = issues;
         this.instructionCoverageData = instructionCoverageData;
@@ -40,6 +42,10 @@ public class SourceFileReport {
         this.methodCoverageData = methodCoverageData;
     }
 
+    public String getFileId() {
+        return fileId;
+    }
+    
     public String getSourceFile() {
 
         return sourceFile;

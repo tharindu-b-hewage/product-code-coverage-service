@@ -95,13 +95,14 @@ public class CoverageCalculator {
 
         /* Use org folder in the extracted folder as it contain the class files required*/
         analyzer.analyzeAll(new File(jacocoSourcesPath
-                + File.separator + Coverage.CLASSES
-                + File.separator + Coverage.ORG));
+                + File.separator + Coverage.CLASSES));
         /*
         Calculate and prepare output data
          */
         String lineCoverageRatio = Double.toString(coverageBuilder.getBundle(component).getLineCounter().getCoveredRatio());
         String linesToCover = Integer.toString(coverageBuilder.getBundle(component).getLineCounter().getTotalCount());
+
+        log.info("Line coverage for " + component + " " + lineCoverageRatio + ".");
 
         return new ComponentCoverage(lineCoverageRatio, linesToCover);
     }

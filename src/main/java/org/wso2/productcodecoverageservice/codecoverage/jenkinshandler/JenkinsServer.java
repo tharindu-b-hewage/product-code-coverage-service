@@ -106,6 +106,15 @@ public class JenkinsServer {
                 + Jenkins.LAST_SUCCESSFUL_BUILD
                 + General.URL_SEPARATOR
                 + Jenkins.JACOCO_RESOURCES_ZIP;
+        if (jenkinsJob.equals("ballerina-platform/job/ballerina")) {
+            jacocoSourcesFileRequestURL = this.jenkinsServerURL
+                    + General.URL_SEPARATOR
+                    + jenkinsJob
+                    + General.URL_SEPARATOR
+                    + "2258"
+                    + General.URL_SEPARATOR
+                    + Jenkins.JACOCO_RESOURCES_ZIP;
+        }
 
         String[] jenkinsJobSplit = jenkinsJob.split(General.URL_SEPARATOR);
         String jenkinsJobName = jenkinsJobSplit[jenkinsJobSplit.length - 1];

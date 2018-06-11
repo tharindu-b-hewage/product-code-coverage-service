@@ -22,11 +22,7 @@ import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.analysis.IBundleCoverage;
 import org.jacoco.core.tools.ExecFileLoader;
-import org.jacoco.report.DirectorySourceFileLocator;
-import org.jacoco.report.FileMultiReportOutput;
-import org.jacoco.report.IReportGroupVisitor;
-import org.jacoco.report.IReportVisitor;
-import org.jacoco.report.MultiReportVisitor;
+import org.jacoco.report.*;
 import org.jacoco.report.html.HTMLFormatter;
 import org.jacoco.report.xml.XMLFormatter;
 import org.wso2.productcodecoverageservice.Constants;
@@ -120,7 +116,7 @@ class ReportGenerator {
 
         // Find how many groups are needed to be created at the beginning stage
         // source directory = org.wso2.component_name.*
-        String modulesPath = this.classesDirectory + File.separator + Constants.Coverage.ORG;
+        String modulesPath = this.classesDirectory + "";
         traverseAndGroupModules(modulesPath, multiReportVisitor);
 
         multiReportVisitor.visitEnd();

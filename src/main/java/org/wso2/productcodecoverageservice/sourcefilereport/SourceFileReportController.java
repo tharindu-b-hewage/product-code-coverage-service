@@ -163,7 +163,7 @@ public class SourceFileReportController {
                     ArrayList<String> issueList = getIssues(findbugsPath, classFilePaths.get(data.getClassName().replace(".java"
                             , ".class")));
                     log.info("Findbugs analysis succesful for " + data.getClassName() + ".");
-                    list.add(new SourceFileReport(key, issueList, instructionCoverageReport,
+                    list.add(new SourceFileReport(data.getFileId(), key, issueList, instructionCoverageReport,
                             branchCoverageReport, lineCoverageReport, methodCoverageReport));
                 }
             }

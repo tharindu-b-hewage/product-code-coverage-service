@@ -19,6 +19,7 @@
 package org.wso2.productcodecoverageservice.sourcefilereport.jsonobject;
 
 public class SourceFileJson {
+    String fileId;
     String productId;
     String componentName;
     String packageName;
@@ -34,6 +35,10 @@ public class SourceFileJson {
 
     public String getPackageName() {
         return packageName;
+    }
+
+    public String getFileId() {
+        return fileId;
     }
 
     public String getClassName() {
