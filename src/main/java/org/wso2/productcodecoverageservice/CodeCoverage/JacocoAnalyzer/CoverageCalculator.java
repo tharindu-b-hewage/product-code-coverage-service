@@ -16,24 +16,27 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JacocoAnalyzer;
+package org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.jacoco.core.analysis.Analyzer;
 import org.jacoco.core.analysis.CoverageBuilder;
 import org.jacoco.core.tools.ExecFileLoader;
-import org.wso2.productcodecoverageservice.CodeCoverage.CodeCoverageController;
-import org.wso2.productcodecoverageservice.CodeCoverage.ZipUtils.Unzipper;
+import org.springframework.boot.system.ApplicationHome;
+import org.wso2.productcodecoverageservice.Application;
 import org.wso2.productcodecoverageservice.Constants.Coverage;
 import org.wso2.productcodecoverageservice.Constants.General;
 import org.wso2.productcodecoverageservice.Constants.Jenkins;
+import org.wso2.productcodecoverageservice.codecoverage.CodeCoverageController;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.Properties;
 
 /*
  A Processor for jacoco and repository build files for code coverage
@@ -43,86 +46,151 @@ public class CoverageCalculator {
     private static final Logger log = Logger.getLogger(CodeCoverageController.class);
     private final String jacocoDatafiles;
     private final String compiledClassesZipFiles;
+    private final String sourcesZipFiles;
+    private final String workspace;
     private final ExecFileLoader dataFileLoader = new ExecFileLoader();
-    private String mergedDataFile = null;
+    private final String productID;
 
-    public CoverageCalculator(Path coverageFiles) {
+    public CoverageCalculator(Path coverageFiles, String productID) {
 
-        this.jacocoDatafiles = coverageFiles.toString() + Jenkins.JACOCO_DATAFILES_FOLDER;
-        this.compiledClassesZipFiles = coverageFiles.toString() + Jenkins.COMPILED_CLASSES_FOLDER;
+        this.workspace = coverageFiles.toString();
+        this.jacocoDatafiles = coverageFiles.toString() + File.separator + Jenkins.JACOCO_DATAFILES_FOLDER;
+        this.compiledClassesZipFiles = coverageFiles.toString() + File.separator + Jenkins.COMPILED_CLASSES_FOLDER;
+        this.sourcesZipFiles = coverageFiles.toString() + File.separator + Jenkins.SOURCE_FILES_FOLDER;
+        this.productID = productID;
     }
 
     /**
      * Get all the execution files belong to the product area jobs and create a single execution data file
      *
-     * @throws IOException
+     * @throws IOException If execution data files cannot be found, loaded or the merged data file cannot be saved
      */
-    public void mergeDataFiles() throws IOException {
+    public void mergeDataFiles(ArrayList<String> jacocoDataFiles) throws IOException {
 
-        /* Get an iterator for all jacoco data files in the directory */
-        String[] dataFileExtension = {Coverage.DATA_FILE_EXTENSION};
-        Iterator<File> dataFiles = (FileUtils.listFiles(new File(this.jacocoDatafiles), dataFileExtension, true)).iterator();
+        if (jacocoDataFiles.size() > 0) {
+            for (String dataFilePath : jacocoDataFiles) {
+                File dataFile = new File(dataFilePath);
+                this.dataFileLoader.load(dataFile);
+            }
 
-        if (!dataFiles.hasNext()) throw new IOException("Zero jacoco data files available");
-
-        while (dataFiles.hasNext()) {
-            this.dataFileLoader.load(dataFiles.next());
+            String mergedDataFilePath = this.workspace + File.separator + Coverage.MERGED_JACOCO_DATA_FILE;
+            this.dataFileLoader.save(new File(mergedDataFilePath), false);
+        } else {
+            log.error("Cannot find jacoco data files to perform merge operation");
         }
-
-        String mergedDataFilePath = this.jacocoDatafiles + General.STEP_BACK + Coverage.MERGED_JACOCO_DATA_FILE;
-        this.dataFileLoader.save(new File(mergedDataFilePath), false);
-
-        this.mergedDataFile = mergedDataFilePath;
     }
 
     /**
      * Get line coverage ratio and number of lines to cover for the product area component
      *
      * @param component Name of the component
-     * @return A hashmap containing line coverage ratio and number of lines to cover
+     * @return A ComponentCoverage object containing line coverage ratio and number of lines to cover
      */
-    private HashMap<String, String> getComponentCoverageData(String component) throws IOException {
+    private ComponentCoverage getComponentCoverageData(String component) throws IOException {
 
-        HashMap<String, String> coverageData = new HashMap<>();
-
-        File componentClassesZipFile = new File(this.compiledClassesZipFiles + File.separator + component + Jenkins.COMPILED_CLASSES_FILE_NAME);
-        File classExtractFolder = new File(this.compiledClassesZipFiles + File.separator + component + Coverage.EXTRACTED_CLASS_FOLDER);
-        if (!classExtractFolder.exists()) classExtractFolder.createNewFile();
-
-        Unzipper.unzipFile(componentClassesZipFile.toString(), classExtractFolder.toString());
+        String jacocoSourcesPath = this.workspace + File.separator + component + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
 
         CoverageBuilder coverageBuilder = new CoverageBuilder();
         Analyzer analyzer = new Analyzer(this.dataFileLoader.getExecutionDataStore(), coverageBuilder);
 
         /* Use org folder in the extracted folder as it contain the class files required*/
-        analyzer.analyzeAll(new File(classExtractFolder.toString() + File.separator + Coverage.ORG_FOLDER));
-
+        analyzer.analyzeAll(new File(jacocoSourcesPath
+                + File.separator + Coverage.CLASSES));
+        /*
+        Calculate and prepare output data
+         */
         String lineCoverageRatio = Double.toString(coverageBuilder.getBundle(component).getLineCounter().getCoveredRatio());
         String linesToCover = Integer.toString(coverageBuilder.getBundle(component).getLineCounter().getTotalCount());
 
-        coverageData.put(Coverage.LINE_COVERAGE_RATIO, lineCoverageRatio);
-        coverageData.put(Coverage.LINES_TO_COVER, linesToCover);
+        log.info("Line coverage for " + component + " " + lineCoverageRatio + ".");
 
-        return coverageData;
+        return new ComponentCoverage(lineCoverageRatio, linesToCover);
+    }
+
+    /**
+     * For each of the product component, generate html coverage reports
+     */
+    public void generateCoverageReports(String[] productAreaComponents) {
+
+        for (String component : productAreaComponents) {
+
+            String[] componentSplitted = component.split(General.URL_SEPARATOR);
+            String jobName = componentSplitted[componentSplitted.length - 1];
+
+            String jacocoSourcesPath = this.workspace + File.separator + jobName + File.separator + Jenkins.EXTRACTED_JACOCO_FOLDER;
+
+            ApplicationHome home = new ApplicationHome(Application.class);
+            String componentName = (new File(jobName)).getName();
+
+            ReportGenerator report = new ReportGenerator();
+            report.setExecFileLoader(this.dataFileLoader);
+            report.setClassesDirectory(new File(jacocoSourcesPath + File.separator + Coverage.CLASSES));
+            report.setSourceDirectory(new File(jacocoSourcesPath + File.separator + Coverage.SOURCES));
+            report.setReportDirectory(new File(
+                    home.getDir()
+                            + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
+                            + File.separator + this.productID
+                            + File.separator + componentName));
+            try {
+                report.createReport();
+                FileUtils.copyDirectory(new File(jacocoSourcesPath + File.separator + Coverage.CLASSES), new File(home.getDir()
+                        + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
+                        + File.separator + this.productID
+                        + File.separator + componentName + File.separator + "compiled-files"));
+                FileUtils.copyDirectory(new File(jacocoSourcesPath + File.separator + Coverage.SOURCES), new File(home.getDir()
+                        + File.separator + Coverage.COVERAGE_REPORTS_DIRECTORY
+                        + File.separator + this.productID
+                        + File.separator + componentName + File.separator + "source-files"));
+            } catch (Exception e) {
+                log.warn("Error creating report for " + componentName + ". Cleaning generated files");
+                try {
+                    FileUtils.cleanDirectory(report.getReportDirectory());
+                } catch (IOException f) {
+                    log.warn("Error cleaning generated report files. Maybe files were not generated at all");
+                }
+            }
+        }
     }
 
     /**
      * Get line coverage ratio and lines to cover count in each product component in the product area
      *
-     * @return
+     * @return A HashMap containing coverage information for each of the product area component
      */
-    public HashMap<String, HashMap<String, String>> getProductCoverageData(String[] productAreaComponents) {
+    public HashMap<String, ComponentCoverage> getProductCoverageData(String[] productAreaComponents) throws IOException {
 
-        HashMap<String, HashMap<String, String>> productCoverageData = new HashMap<>();
+        HashMap<String, ComponentCoverage> productCoverageData = new HashMap<>();
+        ApplicationHome home = new ApplicationHome(Application.class);
+        Properties properties = new Properties();
+        properties.load(new FileReader(home.getDir() + File.separator + General.PROPERTIES_PATH));
 
+        String[] skippingComponents = properties.getProperty(General.SKIPPED_COMPONENTS).trim().split(",");
+
+        EachAreaComponent:
         for (String eachComponent : productAreaComponents) {
+
+            String[] jobNameSplitted = eachComponent.split(General.URL_SEPARATOR);
+            String jobName = jobNameSplitted[jobNameSplitted.length - 1];
+            if (jobName.startsWith(Coverage.ANALYTICS_PRODUCT) || jobName.startsWith(Coverage.PRODUCT)) {
+                log.info("Skipping coverage data for " + eachComponent);
+                continue EachAreaComponent;
+            } else {
+                for (String skippedComponent : skippingComponents) {
+                    if (jobName.contains(skippedComponent)) {
+                        log.info("Skipping coverage data for " + eachComponent);
+                        continue EachAreaComponent;
+                    }
+                }
+            }
             log.info("Calculating coverage data for " + eachComponent);
             try {
-                HashMap<String, String> componentCoverageData = getComponentCoverageData(eachComponent);
-                productCoverageData.put(eachComponent, componentCoverageData);
-            }
-            catch (IOException e) {
-                productCoverageData.put(eachComponent, null);
+                ComponentCoverage componentCoverageData = getComponentCoverageData(jobName);
+                /*
+                As each component is in the format of 'folder_name/job_name', format it and use only the job name
+                 */
+                productCoverageData.put(jobName, componentCoverageData);
+            } catch (IOException e) {
+                log.info("Skipping " + eachComponent + " due to coverage calculation error");
             }
         }
 

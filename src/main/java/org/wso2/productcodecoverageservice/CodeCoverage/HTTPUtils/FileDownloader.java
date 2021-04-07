@@ -16,30 +16,26 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.HTTPUtils;
+package org.wso2.productcodecoverageservice.codecoverage.HTTPutils;
 
 import org.apache.commons.io.FileUtils;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Iterator;
-import java.util.Set;
 
 public class FileDownloader {
 
     /**
+     * Download a file from a URL with basic authentication
      *
-     * @param fileURL
-     * @param fileSavePath Path of the saved file
+     * @param fileURL           Downloading file
+     * @param fileSavePath      Path of the saved file
      * @param encodedAuthString Base 64 encoded authentication string
-     * @throws IOException
+     * @throws IOException If the connection with url failed or failure to save the downloaded file
      */
     public static void downloadWithBasicAuth(String fileURL, File fileSavePath, String encodedAuthString) throws IOException {
 
@@ -56,18 +52,17 @@ public class FileDownloader {
 
             // opens an output stream to save into file
             FileUtils.forceMkdirParent(fileSavePath);
-            FileOutputStream outputStream = new FileOutputStream(fileSavePath);
 
-            int bytesRead = -1;
-            byte[] buffer = new byte[4096];
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, bytesRead);
+            try (FileOutputStream outputStream = new FileOutputStream(fileSavePath)) {
+
+                int bytesRead;
+                byte[] buffer = new byte[4096];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    outputStream.write(buffer, 0, bytesRead);
+                }
             }
-
-            outputStream.close();
             inputStream.close();
-        }
-        else {
+        } else {
             throw new IOException("File download failed");
         }
     }

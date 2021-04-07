@@ -16,14 +16,14 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.ZipUtils;
-
-import org.apache.commons.io.FileUtils;
+package org.wso2.productcodecoverageservice.codecoverage.ziputils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -31,27 +31,30 @@ public class Unzipper {
 
     /**
      * Unzip a compressed file in to a given folder
-     * @param zippedFile
-     * @param unzipFolder
-     * @throws IOException
+     *
+     * @param zippedFile  Path to the zipped file
+     * @param unzipFolder Path file after unzipped
+     * @throws IOException Failure while creating folders or unzipping the zipped folder
      */
-    public static void unzipFile(String zippedFile, String unzipFolder) throws IOException {
+    public static void unzipFile(String zippedFile, File unzipFolder) throws IOException {
 
         byte[] buffer = new byte[1024];
-        ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile));
-        ZipEntry zipEntry = zis.getNextEntry();
-        while (zipEntry != null) {
-            String fileName = zipEntry.getName();
-            File newFile = new File(unzipFolder + File.separator + fileName);
-            FileOutputStream fos = new FileOutputStream(newFile);
-            int len;
-            while ((len = zis.read(buffer)) > 0) {
-                fos.write(buffer, 0, len);
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zippedFile))) {
+            ZipEntry zipEntry = zis.getNextEntry();
+            while (zipEntry != null) {
+                String fileName = zipEntry.getName();
+                File newFile = new File(unzipFolder + File.separator + fileName);
+                Files.createDirectories(Paths.get(newFile.getParent()));
+                newFile.createNewFile();
+                try (FileOutputStream fos = new FileOutputStream(newFile)) {
+                    int len;
+                    while ((len = zis.read(buffer)) > 0) {
+                        fos.write(buffer, 0, len);
+                    }
+                }
+                zipEntry = zis.getNextEntry();
             }
-            fos.close();
-            zipEntry = zis.getNextEntry();
+            zis.closeEntry();
         }
-        zis.closeEntry();
-        zis.close();
     }
 }

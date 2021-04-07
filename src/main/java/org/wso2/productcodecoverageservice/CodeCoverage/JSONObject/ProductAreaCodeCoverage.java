@@ -16,53 +16,49 @@
  *   under the License.
  */
 
-package org.wso2.productcodecoverageservice.CodeCoverage.JSONObject;
+package org.wso2.productcodecoverageservice.codecoverage.jsonobject;
+
+import org.wso2.productcodecoverageservice.codecoverage.jacocoanalyzer.ComponentCoverage;
 
 import java.util.HashMap;
 
 public class ProductAreaCodeCoverage {
 
-    private final String productArea;
-    private final long id;
-    private String serviceBusyStatus;
+    private final String productId;
+    private final String overallLinesToCover;
+    private final String overallLineCoverageRatio;
+
     /*
     Resulting code coverage JSON. Example: {component_name: {coverage_ratio: XX, lines_to_cover: YY}, ..}
      */
-    private final HashMap<String, HashMap<String, String>> productAreaCodeCoverage;
+    private final HashMap<String, ComponentCoverage> componentCodeCoverage;
 
-    public ProductAreaCodeCoverage(long id, String productArea, HashMap<String, HashMap<String, String>> productAreaCodeCoverage) {
+    public ProductAreaCodeCoverage(String productId, HashMap<String, ComponentCoverage> componentCodeCoverage,
+                                   String overallLinesToCover, String overallLineCoverageRatio) {
 
-        this.id = id;
-        this.productArea = productArea;
-        this.productAreaCodeCoverage = productAreaCodeCoverage;
-        this.serviceBusyStatus = "service available";
+        this.productId = productId;
+        this.componentCodeCoverage = componentCodeCoverage;
+        this.overallLineCoverageRatio = overallLineCoverageRatio;
+        this.overallLinesToCover = overallLinesToCover;
     }
 
-    public ProductAreaCodeCoverage(long id, String serviceBusyMessage) {
+    public HashMap<String, ComponentCoverage> getComponentCodeCoverage() {
 
-        this.id = id;
-        this.productArea = null;
-        this.productAreaCodeCoverage = null;
-        this.serviceBusyStatus = serviceBusyMessage;
+        return componentCodeCoverage;
     }
 
-    public long getId() {
+    public String getProductId() {
 
-        return id;
+        return productId;
     }
 
-    public HashMap<String, HashMap<String, String>> getProductAreaCodeCoverage() {
+    public String getOverallLineCoverageRatio() {
 
-        return productAreaCodeCoverage;
+        return overallLineCoverageRatio;
     }
 
-    public String getProductArea() {
+    public String getOverallLinesToCover() {
 
-        return productArea;
-    }
-
-    public String getServiceBusyStatus() {
-
-        return serviceBusyStatus;
+        return overallLinesToCover;
     }
 }
